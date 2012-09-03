@@ -31,7 +31,7 @@ caches = {
 }
 ````
 ####Defining your own AWS Endpoints
-You could also define your endpoints like this and keep your AWS secrets to your self. After all, everyone's entitiled to their secrets if they wish. Syrio won't be looking data you are caching. He's not like the NSA or anything. Wait, uh... I make funny. Only joke. Serious. Don't mind me.
+You could also define your endpoints and keep your secrets to your self. After all, everyone is entitiled to their secrets if they wish. Syrio won't be looking at anything you transmit or cache. He's not like the NSA or anything. uh... I make funny. Only joke. Serious. Don't mind me.
 ```JavaScript
 caches = {
   template :
