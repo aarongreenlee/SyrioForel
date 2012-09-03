@@ -20,18 +20,18 @@ If you are connecting to an externally hosted Memcached server(s) make note of t
 
 Example CacheBox.cfc Configuration
 --
-```ColdFusion
+```JavaScript
 caches = {
-  template =
+  template :
   {
-    provider = 'coldbox.system.cache.providers.CacheBoxProvider'
-    ,properties =
+    provider : 'coldbox.system.cache.providers.CacheBoxProvider'
+    ,properties :
     {
-       objectStore = 'path.to.your.MemcachedStore'
-      ,awsSecretKey = ''
-      ,awsAccessKey = ''
-      ,discoverEndpoints=false
-      ,endpoints='127.0.0.1:11211'
+       objectStore : 'path.to.your.MemcachedStore'
+      ,awsSecretKey : ''
+      ,awsAccessKey : ''
+      ,discoverEndpoints:false
+      ,endpoints:'127.0.0.1:11211'
     }
   }
 }
