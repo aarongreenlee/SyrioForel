@@ -7,7 +7,7 @@ Syrio Forel of Braavos is a character from the book series "A Song of Ice and Fi
 HBO series "Game of Thrones". It is for Syrio's outlook that I honor him...
 
 ####"What do we say to death?"
-####Not Today!"
+####"Not Today!"
 
 ----------
 
