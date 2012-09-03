@@ -4,7 +4,7 @@ SyrioForel
 Use Memcached or AWS ElastiCache within your ColdBox Application.
 
 Syrio Forel of Braavos is a character from the book series "A Song of Ice and Fire" and hit
-HBO series "Game of Thrones". Syrio's outlook and dicipline are traits of a great character. 
+HBO series "Game of Thrones". Syrio's outlook and dicipline are traits of a great character--and he's a bad ass motherF##K#R!
 
 ----------
 
