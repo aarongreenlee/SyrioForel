@@ -40,8 +40,8 @@ caches = {
     ,properties :
     {
        objectStore : 'path.to.your.MemcachedStore'
-      ,awsSecretKey : application.awsSecretKey // "could be a string"
-      ,awsAccessKey : application.awsAccessKey // "could be a string"
+      ,awsSecretKey : ''
+      ,awsAccessKey : ''
       ,discoverEndpoints:true
       ,endpoints:'aws-0.0.0.0.-some-long-dns-name-or-loadbalancer:11211'
     }
