@@ -20,6 +20,7 @@ If you are connecting to an externally hosted Memcached server(s) make note of t
 
 Example CacheBox.cfc Configuration
 --
+```ColdFusion
 caches = {
   template =
   {
@@ -34,3 +35,4 @@ caches = {
     }
   }
 }
+````
