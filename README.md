@@ -42,7 +42,7 @@ caches = {
        objectStore : 'path.to.your.MemcachedStore'
       ,awsSecretKey : ''
       ,awsAccessKey : ''
-      ,discoverEndpoints:true
+      ,discoverEndpoints:false
       ,endpoints:'aws-0.0.0.0.-some-long-dns-name-or-loadbalancer:11211'
     }
   }
