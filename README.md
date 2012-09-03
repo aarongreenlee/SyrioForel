@@ -4,10 +4,7 @@ SyrioForel
 Use Memcached or AWS ElastiCache within your ColdBox Application.
 
 Syrio Forel of Braavos is a character from the book series "A Song of Ice and Fire" and hit
-HBO series "Game of Thrones". It is for Syrio's outlook that I honor him...
-
-####"What do we say to death?"
-####"Not Today!"
+HBO series "Game of Thrones". Syrio's outlook and dicipline are traits of a great character. 
 
 ----------
 
