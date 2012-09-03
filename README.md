@@ -11,7 +11,9 @@ HBO series "Game of Thrones". Syrio's outlook and dicipline are traits of a grea
 
 ###Working with Memcached (not AWS ElastiCache)
 ----------
-This is perhaps the easiest way to have Syrio work for you. Download Memcached Server (linux from Memcached.org; Windows from http://splinedancer.com/memcached-win32/) and get it to work. Running on your local machine should be pretty straight forard. If you are connecting to a external Memcached cluster make note of the endpoint(s).
+This is perhaps the easiest way to have Syrio work for you.
+
+Download Memcached Server (linux from Memcached.org; Windows from http://splinedancer.com/memcached-win32/) and get it to work. Running on your local machine should be pretty straight forard. If you are connecting to a external Memcached cluster make note of the endpoint(s).
 
 ####Getting Your Memcached Enpoint(s)
 If you are using a local Memcached server your endpoint is most likly "127.0.0.1:11211".
