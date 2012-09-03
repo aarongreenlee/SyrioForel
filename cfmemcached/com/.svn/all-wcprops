@@ -1,0 +1,23 @@
+K 25
+svn:wc:ra_dav:version-url
+V 36
+/memcached/!svn/ver/6/tags/0.1.1/com
+END
+memcached.cfc
+K 25
+svn:wc:ra_dav:version-url
+V 50
+/memcached/!svn/ver/6/tags/0.1.1/com/memcached.cfc
+END
+_base.cfc
+K 25
+svn:wc:ra_dav:version-url
+V 46
+/memcached/!svn/ver/6/tags/0.1.1/com/_base.cfc
+END
+futuretask.cfc
+K 25
+svn:wc:ra_dav:version-url
+V 51
+/memcached/!svn/ver/6/tags/0.1.1/com/futuretask.cfc
+END

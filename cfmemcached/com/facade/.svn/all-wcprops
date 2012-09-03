@@ -1,0 +1,23 @@
+K 25
+svn:wc:ra_dav:version-url
+V 43
+/memcached/!svn/ver/6/tags/0.1.1/com/facade
+END
+serverfacade.cfc
+K 25
+svn:wc:ra_dav:version-url
+V 60
+/memcached/!svn/ver/6/tags/0.1.1/com/facade/serverfacade.cfc
+END
+facadefactory.cfc
+K 25
+svn:wc:ra_dav:version-url
+V 61
+/memcached/!svn/ver/6/tags/0.1.1/com/facade/facadefactory.cfc
+END
+abstractbasefacade.cfc
+K 25
+svn:wc:ra_dav:version-url
+V 66
+/memcached/!svn/ver/6/tags/0.1.1/com/facade/abstractbasefacade.cfc
+END

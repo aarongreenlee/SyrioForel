@@ -1,0 +1,23 @@
+K 25
+svn:wc:ra_dav:version-url
+V 52
+/memcached/!svn/ver/6/tags/0.1.1/com/util/javaloader
+END
+licence.txt
+K 25
+svn:wc:ra_dav:version-url
+V 64
+/memcached/!svn/ver/6/tags/0.1.1/com/util/javaloader/licence.txt
+END
+javaloader.cfc
+K 25
+svn:wc:ra_dav:version-url
+V 67
+/memcached/!svn/ver/6/tags/0.1.1/com/util/javaloader/javaloader.cfc
+END
+readme.txt
+K 25
+svn:wc:ra_dav:version-url
+V 63
+/memcached/!svn/ver/6/tags/0.1.1/com/util/javaloader/readme.txt
+END
