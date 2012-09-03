@@ -8,7 +8,46 @@ HBO series "Game of Thrones". Syrio's outlook and dicipline are traits of a grea
 
 ----------
 
+###Working with AWS ElastiCache
+----------
+You can only connect to an Amazon ElastiCache instance from your AWS environment. Don't try to connect to your ElastiCache instance from your office, or development servers in Switzerland where you keep your private accounts, right? I mean, am I wrong to keep my money there so Uncle Sam won't tax me? All Americans do this, right? Anyway, just make sure you are only going to pass these settings to an instance that is deployed on your EC2.
 
+####Getting Your Memcached Enpoint(s)
+Syrio works hard for you. He can find your endpoints for you if you provide him with your AWS Access and Secret keys. This is sensitive information so be carful in how you do this. For my deployments, I have a build process (could be manual) that saves a "secrets.txt" file to the server. This file is not in version control. When ColdFusion starts I read this file and set Application variables. Not rocket science. Then, I pass the variables as you see below.
+```JavaScript
+caches = {
+  template :
+  {
+    provider : 'coldbox.system.cache.providers.CacheBoxProvider'
+    ,properties :
+    {
+       objectStore : 'path.to.your.MemcachedStore'
+      ,awsSecretKey : application.awsSecretKey // "could be a string"
+      ,awsAccessKey : application.awsAccessKey // "could be a string"
+      ,discoverEndpoints:true
+      ,endpoints:''
+    }
+  }
+}
+````
+####Defining your own AWS Endpoints
+You could also define your endpoints like this and keep your AWS secrets to your self. After all, everyone's entitiled to their secrets if they wish. Syrio won't be looking data you are caching. He's not like the NSA or anything. Wait, uh... I make funny. Only joke. Serious. Don't mind me.
+```JavaScript
+caches = {
+  template :
+  {
+    provider : 'coldbox.system.cache.providers.CacheBoxProvider'
+    ,properties :
+    {
+       objectStore : 'path.to.your.MemcachedStore'
+      ,awsSecretKey : application.awsSecretKey // "could be a string"
+      ,awsAccessKey : application.awsAccessKey // "could be a string"
+      ,discoverEndpoints:true
+      ,endpoints:'aws-0.0.0.0.-some-long-dns-name-or-loadbalancer:11211'
+    }
+  }
+}
+````
 ###Working with Memcached (not AWS ElastiCache)
 ----------
 This is perhaps the easiest way to have Syrio work for you.
