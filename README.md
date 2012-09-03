@@ -8,6 +8,16 @@ HBO series "Game of Thrones". Syrio's outlook and dicipline are traits of a grea
 
 ----------
 
+###Getting Started -- This will take a little work!
+----------
+You need to add this to your ColdBox application.
+
+The basic steps look like this
+
+* Enabling CFCs - You can put the CFCs found within the CFC directory anywhere you like. You might place it in your app's "/models/" directory--or in some lib. Just be sure you know the path and that it can be accessed from your deployed ColdBox application. 
+* Enabling JARs - You need to load the JARs in the lib directory. You can use JavaLoader, place the JARs in ColdFusion's main lib directory (google it) or load it within your Application.cfc using ColdFusion 10 or Railo or Open Blue Dragon. If you are using ColdFusion 10 and you get errors about ColdFusion package access being disallowed [you may need to enable access to ColdFusion packages](http://helpx.adobe.com/coldfusion/kb/coldfusion-administrator-fails-permission-denied.html).
+
+
 ###Working with AWS ElastiCache
 ----------
 You can only connect to an Amazon ElastiCache instance from your AWS environment. Don't try to connect to your ElastiCache instance from your office, or development servers in Switzerland where you keep your private accounts, right? I mean, am I wrong to keep my money there so Uncle Sam won't tax me? All Americans do this, right? Anyway, just make sure you are only going to pass these settings to an instance that is deployed on your EC2.
