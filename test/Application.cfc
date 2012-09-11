@@ -6,7 +6,7 @@ component
 	this.root = this.root = getDirectoryFromPath(getCurrentTemplatePath()).ReplaceFirst("([^\\\/]+[\\\/]){1}$", "");
 	
 	this.mappings = {
-		'/test'=this.root & 'test'
+		'/test' = this.root & 'test'
 		,'/app' = this.root
 		,'/mxunit' = '/C/web/mxunit'
 	};
