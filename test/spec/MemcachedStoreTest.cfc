@@ -37,6 +37,8 @@ component extends="mxunit.framework.TestCase"
 		variables.CacheProvider = MockBox.createStub();
 		variables.CacheProvider.$("getConfiguration",WorkingLocalServer);
 		
+		Memcached = MockBox.createStub();
+		
 		SUT = new MemcachedStore(CacheProvider);
 
 		MockBox.prepareMock(SUT);
@@ -44,13 +46,12 @@ component extends="mxunit.framework.TestCase"
 	
 	function tearDown()
 	{
-		makePublic(SUT,'shutdown');
-		SUT.shutDown();
-	}
-	
-	function init_accepts_valid_config() {
-		SUT.init(cacheProvider=CacheProvider);
-		assert(true,"It should have worked.");
+		try { 
+			makePublic(SUT,'shutdown');
+			SUT.shutDown();
+		} catch (any e) {
+			// graceful...
+		}
 	}
 	
 	/**
@@ -125,16 +126,6 @@ component extends="mxunit.framework.TestCase"
 		assert(true,"It should have worked.");
 	}
 	
-	function integration_get_set_works()
-	{
-		var tickCount = getTickCount();
-		SUT.set("test1",0,"Hello from #tickCount#");
-		sleep(1);
-		var getResult = SUT.get("test1");
-		
-		assertEquals("Hello from #tickCount#",getResult);
-	}
-	
 	function init_throws_when_missing_config_keys() {
 		
 		CacheProvider.$("getConfiguration",{});
@@ -155,7 +146,8 @@ component extends="mxunit.framework.TestCase"
 			,awsSecretKey = ''
 			,awsAccessKey = ''
 			,discoverEndpoints=false
-			,endpoints=''		
+			,endpoints=''
+			,skipLookupDoubleGet=false	
 		});
 
 		try {
@@ -173,6 +165,7 @@ component extends="mxunit.framework.TestCase"
 			,awsAccessKey = ''
 			,discoverEndpoints=false
 			,endpoints='127.0.0.1'		
+			,skipLookupDoubleGet=false
 		});
 
 		try {
@@ -189,6 +182,7 @@ component extends="mxunit.framework.TestCase"
 			,awsAccessKey = ''
 			,discoverEndpoints=true
 			,endpoints=''		
+			,skipLookupDoubleGet=false
 		});
 
 		SUT.$('discover','');
@@ -203,11 +197,10 @@ component extends="mxunit.framework.TestCase"
 	
 	function flush() { 
 		Memcached.$('flush');
-		SUT.$('build',Memcached);
-		
+		SUT.$property('instance','variables',{'memcached'=Memcached});
+				
 		SUT.flush();
 
-		assertEquals(1,SUT.$count('build'),'this.build() callcount.');
 		assertEquals(1,Memcached.$count('flush'),'Memcached.flush() callcount unexpected.');
 	};
 	
@@ -223,57 +216,54 @@ component extends="mxunit.framework.TestCase"
 		assertEquals(["Unsupported by Memcached"],SUT.getKeys(),'Unexpected result.');
 	};
 	
-	function lookup_wontBuildWhenActive() { 
-		SUT
-			.$property('active','variables',true)
-			.$('blockingGet',true)
-			.$('build');
+	function lookup_delegates_to_get_returns_false_for_null() { 
+		SUT.$('get');
 
 		var r = SUT.lookup('example');
 
-		assertEquals(0,SUT.$count('build'),'Should not build when active=true.');
-		assertEquals(0,SUT.$count('blockingGet'),'this.blockingGet() call count.');
-		assert(r,'Mocked value for this.blockingGet() was not returned.');
+		assertEquals(1,SUT.$count('get'),'Should delegate to GET()');
+		assertEquals('example',SUT.$callLog().get[1].objectKey);
+		assertFalse(r,'The mocked result from GET was null. Expected false.');
 	};
-	function lookup_willBuildWhenInactive() { 
-		SUT
-			.$property('active','variables',false)
-			.$('blockingGet',true)
-			.$('build');
+	function lookup_delegates_to_get_returns_true_for_null() { 
+		SUT.$('get','something exists!');
 
-		var r = SUT.lookup('WhenTwoShallMeet');
+		var r = SUT.lookup('example');
 
-		assertEquals(0,SUT.$count('build'),'Should not build when active=true.');
-		assertEquals('WhenTwoShallMeet',SUT.$callLog('blockingGet')[1][1],'Unexpected argument to blockingGet.');
-		assert(r,'Mocked value for this.blockingGet() was not returned.');
+		assertEquals(1,SUT.$count('get'),'Should delegate to GET()');
+		assertEquals('example',SUT.$callLog().get[1].objectKey);
+		assert(r,'The mocked result from GET was not null. Expected true.');
 	};
-	
 	function get()
 	{
-		SUT
-			.$('blockingGet')
-			.get('OneDoesNotKnow');
-
+		SUT.$('blockingGet','result');
+		
+		var r = SUT.get('thisOneOrThatOne');
+		
 		assertEquals(1,SUT.$count('blockingGet'),'this.blockingGet() call count.');
-		assertEquals('OneDoesNotKnow',SUT.$callLog('blockingGet')[1][1],'Unexpected argument to blockingGet.');
+		assertEquals('thisOneOrThatOne',SUT.$callLog().blockingGet[1][1],'Unexpected argument to blockingGet.');
+		assertEquals('result',r,'Expected our mocked result from BlockingGet to be returned.');
 	};
 
-	function getQuiet() {
-		SUT
-			.$('blockingGet')
-			.getQuiet('thisOneOrThatOne');
-
+	function getQuiet()
+	{
+		SUT.$('blockingGet','result');
+		
+		var r = SUT.getQuiet('thisOneOrThatOne');
+		
 		assertEquals(1,SUT.$count('blockingGet'),'this.blockingGet() call count.');
-		assertEquals('thisOneOrThatOne',SUT.$callLog('blockingGet')[1][1],'Unexpected argument to blockingGet.');
+		assertEquals('thisOneOrThatOne',SUT.$callLog().blockingGet[1][1],'Unexpected argument to blockingGet.');
+		assertEquals('result',r,'Expected our mocked result from BlockingGet to be returned.');
 	};
 	
-	function expireObject() {
-		SUT
-			.$('delete')
-			.expireObject('pickOne');
-
-		assertEquals(1,SUT.$count('delete'),'this.blockingGet() call count.');
-		assertEquals('pickOne',SUT.$callLog('delete')[1][1],'Unexpected argument to delete.');
+	function expireObject()
+	{
+		SUT.$('delete');
+		
+		var r = SUT.expireObject('thisOneOrThatOne');
+		
+		assertEquals(1,SUT.$count('delete'),'this.delete() call count.');
+		assertEquals('thisOneOrThatOne',SUT.$callLog().delete[1].objectKey,'Unexpected argument to delete for objectKey.');
 	};
 	
 	function isExpired() {
@@ -293,10 +283,14 @@ component extends="mxunit.framework.TestCase"
 	};
 	
 	function getSize() {
+		
+		Memcached.$('getStats',{});
+		SUT.$property('instance','variables',{'memcached'=Memcached});
+		
 		SUT
 			.$property('active','variables',true)
-			.$('convertHashMapToStruct',{'localhost'={total_items=100}'remotehost'={total_items=26}});
+			.$('convertHashMapToStruct',{'total_items'=100});
 
-		assertEquals(126,SUT..getSize(),'Total_items in both hosts should be added.');
+		assertEquals(100,SUT.getSize(),'Total_items in both hosts should be added.');
 	}
 }

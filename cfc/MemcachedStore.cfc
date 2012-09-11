@@ -9,7 +9,12 @@ Description : 	A ColdBox ObjectStore that supports the Memcached database as
 				Many thanks go to Job Hurschi for his contribution to our
 				community with the release of cfmemcached (download it at:
 				http://cfmemcached.riaforge.org/) with which this source code
-				is based. 
+				is based.
+				
+				Access the Java Memcached Client Docs
+				http://dustin.github.com/java-memcached-client/apidocs/
+				
+				 
 ------------------------------------------------------------------------------*/
 
 /** CacheBox Object Store supporting native Memcached and Amazon ElastiCache. **/
@@ -58,11 +63,21 @@ implements="coldbox.system.cache.store.IObjectStore"
 		// Validate the config...
 		//
 		// Require All Config Keys
-		if (!arrayIsEmpty(missingKeys)) throw(message=strings.noCreate,detail='The MemcachedStore needs some information to be passed via the CacheBox.cfc settings file when a provider is defined for this cache. These settings would typically be passed as settings when a CacheBox Provider is constructed. The missing configuration settings are: #arrayToList(missingKeys)#.');
+		if (!arrayIsEmpty(missingKeys))
+			throw(
+				 message=strings.noCreate
+				,detail='The MemcachedStore needs some information to be passed via the CacheBox.cfc settings file when a provider is defined for this cache. These settings would typically be passed as settings when a CacheBox Provider is constructed. The missing configuration settings are: #arrayToList(missingKeys)#.'
+				,errorCode='MemcachedStore.BadConfig'
+			);
 		//
 		// Make sure we have a known endpoint or have permission to find one.
 		variables.config.endpoints = (len(trim(config.endpoints)) > 0) ? config.endpoints : "";
-		if (!config.discoverEndpoints && len(variables.config.endpoints) == 0) throw(message=strings.badConfig,detail="You have specified you do not want the MemcachedStore to discover endpoints using your AWS credentials; however, you have not provided any endpoints. The MemcachedStore won't know which server to talk to!");
+		if (!config.discoverEndpoints && len(variables.config.endpoints) == 0)
+			throw(
+				 message=strings.badConfig
+				,detail="You have specified you do not want the MemcachedStore to discover endpoints using your AWS credentials; however, you have not provided any endpoints. The MemcachedStore won't know which server to talk to!"
+				,errorCode='MemcachedStore.ServerLockout'
+			);
 		//
 		// Discover Endpoints?
 		if (config.discoverEndpoints)
@@ -72,12 +87,22 @@ implements="coldbox.system.cache.store.IObjectStore"
 		}
 		//
 		// Do we have valid endpoint's yet? 
-		if (len(trim(variables.config.endpoints)) == 0) throw(message="MemcachedStore was unable to determine endpoints.",detail="No endpoints were provided and no active ElastiCache endpoints were discovered.")
+		if (len(trim(variables.config.endpoints)) == 0)
+			throw(
+				 message="MemcachedStore was unable to determine endpoints."
+				,detail="No endpoints were provided and no active ElastiCache endpoints were discovered."
+				,errorCode='MemcachedStore.NoEndpoints'
+			);
 		//
 		// Are all endpoints valid?
 		var invalidEndpoints = [];
 		for(var endpoint in listToArray(variables.config.endpoints,' ') ) if (listLen(endpoint,':') != 2 || !isNumeric(listLast(endpoint,':'))) arrayAppend(invalidEndpoints,endpoint); 
-		if (!arrayIsEmpty(invalidEndpoints)) throw(message="MemcachedStore rejected endpoints.",detail='The following endpoint(s) do not appear to be valid. Expecting something like 127.0.0.1:{11233} or aws-really-long-128.00.11.11-name.elasticache.com. The rejected endpoints are #arrayToList(invalidEndpoints)#.');
+		if (!arrayIsEmpty(invalidEndpoints))
+			throw(
+				 message="MemcachedStore rejected endpoints."
+				,detail='The following endpoint(s) do not appear to be valid. Expecting something like 127.0.0.1:{11233} or aws-really-long-128.00.11.11-name.elasticache.com. The rejected endpoints are #arrayToList(invalidEndpoints)#.'
+				,errorCode='MemcachedStore.InvalidEndpoints'
+			);
 		
 		// 
 		variables.instance.indexer = createObject("component","#variables.config.dotNotationPathToCFCs#.MemcachedIndexer").init("");
@@ -86,9 +111,10 @@ implements="coldbox.system.cache.store.IObjectStore"
 
 		return this;	
 	}
-
+	
 	public void function flush(){
 		debug("MemcachedStore:Flush();");
+		variables.instance.memcached.flush();
 	}
 	public void function reap(){
 		debug("MemcachedStore:Reap();");
@@ -162,7 +188,7 @@ implements="coldbox.system.cache.store.IObjectStore"
 		if (!variables.active) build("memcached");
 		
 		var stats = convertHashMapToStruct(variables.instance.Memcached.getStats());
-		
+		//writeDump(stats);abort;
 		var r = 0;
 		for(var machine in stats) r += convertHashMapToStruct(stats[machine]).total_items;
 		
