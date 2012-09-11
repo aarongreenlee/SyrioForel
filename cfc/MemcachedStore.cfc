@@ -109,54 +109,32 @@ implements="coldbox.system.cache.store.IObjectStore"
 	{
 		debug("MemcachedStore:getKeys();");
 		
-		return [];
+		return ['Unsupported by Memcached'];
 	}
 	public any function lookup(
 		required any objectKey
 	){
-		// Ensure Memcached Exists
-		if (!variables.active) build("memcached");
-		
-		debug("MemcachedStore:lookup(#arguments.objectKey#);");
-
-		writeDump(var=get(objectKey=arguments.objectKey),top=3,abort=false,output="console");
-
 		return (isNull(get(objectKey=arguments.objectKey))) ? false : true;
 	}
 	public any function get(
 		required any objectKey
 	){
-		// Ensure Memcached Exists
-		if (!variables.active) build("memcached");
-		
-		debug("MemcachedStore:get(#arguments.objectKey#);");
-		
 		return blockingGet(arguments.objectKey);
 	}
 	public any function getQuiet(
 		required any objectKey
 	){
-		// Ensure Memcached Exists
-		if (!variables.active) build("memcached");
-		
-		debug("MemcachedStore:getQuiet(#arguments.objectKey#);");
-		return get(objectKey=arguments.objectKey);
+		return blockingGet(arguments.objectKey);
 	}
 	public void function expireObject(
 		required any objectKey
 	){
-		// Ensure Memcached Exists
-		if (!variables.active) build("memcached");
-		
-		debug("MemcachedStore:expireObject(#arguments.objectKey#);");
+		delete(objectKey=arguments.objectKey);
 	}
 	public any function isExpired(
 		required any objectKey
 	){
-		// Ensure Memcached Exists
-		if (!variables.active) build("memcached");
-		
-		debug("MemcachedStore:isExpired(#arguments.objectKey#);");
+		return true;
 	}
 	
 	public void function set(
@@ -165,12 +143,7 @@ implements="coldbox.system.cache.store.IObjectStore"
 		,any timeout=35
 		,any lastAccessTimeout=''
 		,any extras
-	){
-		// Ensure Memcached Exists
-		if (!variables.active) build("memcached");
-		
-		debug("MemcachedStore:set(#arguments.objectKey#);");
-		
+	){	
 		blockingSet(
 			 key=arguments.objectKey
 			,value=arguments.object
@@ -186,9 +159,9 @@ implements="coldbox.system.cache.store.IObjectStore"
 	}
 	/** Return the number of items stored within Memcached. **/
 	public any function getSize(){
-		var Memcached = build("memcached");
-
-		var stats = convertHashMapToStruct(Memcached.getStats());
+		if (!variables.active) build("memcached");
+		
+		var stats = convertHashMapToStruct(variables.instance.Memcached.getStats());
 		
 		var r = 0;
 		for(var machine in stats) r += convertHashMapToStruct(stats[machine]).total_items;
@@ -386,6 +359,8 @@ implements="coldbox.system.cache.store.IObjectStore"
 		,required any value
 		,numeric expiry=0
 	){
+		if (!variables.active) build("memcached");
+
 		var futureTask = "";
 		var ret = "";
 		try {
@@ -408,6 +383,8 @@ implements="coldbox.system.cache.store.IObjectStore"
 	**/
 	private any function asyncGet(required string key)
 	{
+		if (!variables.active) build("memcached");
+
 		var ret = "";
 		var futureTask ="";
 		// gotta go through all this to catch the nulls.
@@ -431,6 +408,8 @@ implements="coldbox.system.cache.store.IObjectStore"
 	){
 		if (!structKeyExists(arguments,'timeout')) arguments.timeout = variables.config.defaultTimeoutValue;
 		if (!structKeyExists(arguments,'timeoutUnit')) arguments.timeoutUnit = variables.config.defaultTimeoutUnit;
+		
+		if (!variables.active) build("memcached");
 
 		// If we already looked up this value within the request just return it.
 		// This prevents double cache-hits by the ColdBox framework since it looks up
@@ -468,6 +447,8 @@ implements="coldbox.system.cache.store.IObjectStore"
 		 required key
 		,numeric delay=0
 	){
+		if (!variables.active) build("memcached");
+
 		var ret = false;
 		var futureTask = "";
 		try 	{
@@ -493,6 +474,8 @@ implements="coldbox.system.cache.store.IObjectStore"
 		,required any value
 		,numeric expiry=0
 	){
+		if (!variables.active) build("memcached");
+
 		var futureTask = "";
 		var ret = "";
 		try 	{

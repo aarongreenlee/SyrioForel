@@ -120,35 +120,183 @@ component extends="mxunit.framework.TestCase"
 		assert(SUT.lookup(k),"The lookup was false!");
 	}
 	
-	function init_throws_when_missing_config_keys() { return; };
-	function init_prevent_server_lockout() { return; };
-	function init_invalidates_bad_endpoints() { return; };
-	function init_invalidates_no_endpoints(){ return; };
-	function init_throws_when_AWS_library_is_missing(){ return; };
+	function init_accepts_valid_config() {
+		SUT.init(cacheProvider=CacheProvider);
+		assert(true,"It should have worked.");
+	}
 	
+	function integration_get_set_works()
+	{
+		var tickCount = getTickCount();
+		SUT.set("test1",0,"Hello from #tickCount#");
+		sleep(1);
+		var getResult = SUT.get("test1");
+		
+		assertEquals("Hello from #tickCount#",getResult);
+	}
 	
-	function flush() { return; };
-	
-	function reap() { return; };
-	
-	function clearAll() { return; };
-	
-	function getKeys() { return; };
-	
-	function lookup() { return; };
-	
-	function get() { return; };
+	function init_throws_when_missing_config_keys() {
+		
+		CacheProvider.$("getConfiguration",{});
 
-	function getQuiet() { return; };
-	
-	function expireObject() { return; };
-	
-	function isExpired() { return; };
+		try {
+			SUT.init(CacheProvider);
+			fail("Expected SUT to throw during init.");
+		} catch (any e) {
+			assertEquals("MemcachedStore.BadConfig",e.errorCode,"Unexpected errorCode for CFCatch.");
+		}
+		return;
+	};
+	/** Ensure we can either discover servers or servers were provided. **/
+	function init_prevent_server_lockout()
+	{
+		CacheProvider.$("getConfiguration",{
+			 objectStore = 'coldbox.system.cache.store.MemcachedStore'
+			,awsSecretKey = ''
+			,awsAccessKey = ''
+			,discoverEndpoints=false
+			,endpoints=''		
+		});
 
-	function set() { return; };
+		try {
+			SUT.init(CacheProvider=CacheProvider);
+		} catch (any e) {
+			assertEquals("MemcachedStore.ServerLockout",e.errorCode,"Unexpected errorCode for CFCatch");
+		}
+
+		return;
+	};
+	function init_invalidates_bad_endpoints() {
+		CacheProvider.$("getConfiguration",{
+			 objectStore = 'coldbox.system.cache.store.MemcachedStore'
+			,awsSecretKey = ''
+			,awsAccessKey = ''
+			,discoverEndpoints=false
+			,endpoints='127.0.0.1'		
+		});
+
+		try {
+			SUT.init(CacheProvider=CacheProvider);
+		} catch (any e) {
+			assertEquals("MemcachedStore.InvalidEndpoints",e.errorCode,"Unexpected errorCode for CFCatch");
+		}		
+		return;
+	};
+	function init_invalidates_no_endpoints(){
+		CacheProvider.$("getConfiguration",{
+			 objectStore = 'coldbox.system.cache.store.MemcachedStore'
+			,awsSecretKey = ''
+			,awsAccessKey = ''
+			,discoverEndpoints=true
+			,endpoints=''		
+		});
+
+		SUT.$('discover','');
+
+		try {
+			SUT.init(CacheProvider=CacheProvider);
+		} catch (any e) {
+			assertEquals("MemcachedStore.NoEndpoints",e.errorCode,"Unexpected errorCode for CFCatch");
+		}		
+		return;
+	};
 	
-	function clear() { return; };
+	function flush() { 
+		Memcached.$('flush');
+		SUT.$('build',Memcached);
+		
+		SUT.flush();
+
+		assertEquals(1,SUT.$count('build'),'this.build() callcount.');
+		assertEquals(1,Memcached.$count('flush'),'Memcached.flush() callcount unexpected.');
+	};
 	
-	function getSize() { return; }
+	function reap() { 
+		flush();
+	};
 	
+	function clearAll() { 
+		flush();
+	};
+	
+	function getKeys() {
+		assertEquals(["Unsupported by Memcached"],SUT.getKeys(),'Unexpected result.');
+	};
+	
+	function lookup_wontBuildWhenActive() { 
+		SUT
+			.$property('active','variables',true)
+			.$('blockingGet',true)
+			.$('build');
+
+		var r = SUT.lookup('example');
+
+		assertEquals(0,SUT.$count('build'),'Should not build when active=true.');
+		assertEquals(0,SUT.$count('blockingGet'),'this.blockingGet() call count.');
+		assert(r,'Mocked value for this.blockingGet() was not returned.');
+	};
+	function lookup_willBuildWhenInactive() { 
+		SUT
+			.$property('active','variables',false)
+			.$('blockingGet',true)
+			.$('build');
+
+		var r = SUT.lookup('WhenTwoShallMeet');
+
+		assertEquals(0,SUT.$count('build'),'Should not build when active=true.');
+		assertEquals('WhenTwoShallMeet',SUT.$callLog('blockingGet')[1][1],'Unexpected argument to blockingGet.');
+		assert(r,'Mocked value for this.blockingGet() was not returned.');
+	};
+	
+	function get()
+	{
+		SUT
+			.$('blockingGet')
+			.get('OneDoesNotKnow');
+
+		assertEquals(1,SUT.$count('blockingGet'),'this.blockingGet() call count.');
+		assertEquals('OneDoesNotKnow',SUT.$callLog('blockingGet')[1][1],'Unexpected argument to blockingGet.');
+	};
+
+	function getQuiet() {
+		SUT
+			.$('blockingGet')
+			.getQuiet('thisOneOrThatOne');
+
+		assertEquals(1,SUT.$count('blockingGet'),'this.blockingGet() call count.');
+		assertEquals('thisOneOrThatOne',SUT.$callLog('blockingGet')[1][1],'Unexpected argument to blockingGet.');
+	};
+	
+	function expireObject() {
+		SUT
+			.$('delete')
+			.expireObject('pickOne');
+
+		assertEquals(1,SUT.$count('delete'),'this.blockingGet() call count.');
+		assertEquals('pickOne',SUT.$callLog('delete')[1][1],'Unexpected argument to delete.');
+	};
+	
+	function isExpired() {
+		assert(SUT.isExpired("anything"),'IsExpired should always be true.');
+	};
+
+	function set() { 
+		SUT
+			.$('blockingSet')
+			.set('KeyToMy','Heart');
+
+		assertEquals(1,SUT.$count('blockingSet'),'this.blockingSet() call count.');
+	};
+	
+	function clear() { 
+
+	};
+	
+	function getSize() {
+		SUT
+			.$property('active','variables',true)
+			.$('convertHashMapToStruct',{'localhost'={total_items=100}'remotehost'={total_items=26}});
+
+		assertEquals(126,SUT..getSize(),'Total_items in both hosts should be added.');
+	}
 }
