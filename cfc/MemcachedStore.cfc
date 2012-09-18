@@ -34,7 +34,10 @@ implements="coldbox.system.cache.store.IObjectStore"
 		,'skipLookupDoubleGet' = true
 	};
 	
-	variables.instance = {};
+	variables.instance = {
+		 aws = {}
+		,hostname = createObject('java','java.net.InetAddress').getLocalHost().getHostName()
+	};
 
 	/**
 		@cacheProvider The associated cache provider as coldbox.system.cache.ICacheProvider.
@@ -79,17 +82,18 @@ implements="coldbox.system.cache.store.IObjectStore"
 				,errorCode='MemcachedStore.ServerLockout'
 			);
 		//
-		// Discover Endpoints?
+		
+		var attemptedDiscover = false;
 		if (config.discoverEndpoints)
-		{
-			// todo... load AWS and ask for endpoints.
-			variables.config.endpoints &= '';
-		}
-		//
+		{			
+			variables.config.endpoints = discoverAWSEndpoints(config);
+			attemptedDiscover=true;
+		}		
+		
 		// Do we have valid endpoint's yet? 
 		if (len(trim(variables.config.endpoints)) == 0)
 			throw(
-				 message="MemcachedStore was unable to determine endpoints."
+				 message=(attemptedDiscover) ?  "MemcachedStore was unable to discover endpoints!" : "MemcachedStore was unable to determine endpoints from config file!"
 				,detail="No endpoints were provided and no active ElastiCache endpoints were discovered."
 				,errorCode='MemcachedStore.NoEndpoints'
 			);
@@ -104,7 +108,12 @@ implements="coldbox.system.cache.store.IObjectStore"
 				,errorCode='MemcachedStore.InvalidEndpoints'
 			);
 		
-		// 
+		if (!listContainsNoCase(variables.instance.hostname,'ec2'))
+			throw(
+			 	 message="Attempting External ElastiCache Access?"
+				,detail="It appears that you are trying to connect to an AWS ElastiCache instance from something other than an EC2. This just won't do! ElastiCache connections are only available within the AWS cloud. If you think this is an error please report it. The good news is that we detected #arrayLen(nodes)# cache nodes so things are communication properly."
+				,errorCode="MemcachedStore.AWSExternal");
+			
 		variables.instance.indexer = createObject("component","#variables.config.dotNotationPathToCFCs#.MemcachedIndexer").init("");
 
 		debug("MemcachedStore:init();");
@@ -551,6 +560,35 @@ implements="coldbox.system.cache.store.IObjectStore"
 		}
 		
 		return theStruct;
+	}
+	
+	/** 
+		Using the provided AWS Access and Secret keys this method will talk to
+		AWS and return either an empty string or a space-delemited list of the
+		cache endpoints it discovered using your credentials.
+	**/
+	private string function discoverAWSEndpoints(required config)
+	{
+		// Must have populated AWS Secret/Access values.
+		if (!structKeyExists(arguments.config,'awsaccesskey') || !structKeyExists(arguments.config,'awssecretkey') || len(trim(arguments.config.awsAccessKey)) == 0 || len(trim(arguments.config.awsSecretKey)) == 0)
+			throw(message="Missing AWSAccessKey and/or AWSSecretKey",detail='These properties should be provided when configuring your CacheBox Provider. These are required by the MemcachedStore when you ask to discover endpoints using your AWS credentials.',ErrorCode='MemcachedStore.BadConfig');
+
+		// Store the properties within Java so the AWS library can find them.
+		var AWSCredentials = createObject("java","com.amazonaws.auth.BasicAWSCredentials").init(arguments.config.awsAccessKey,arguments.config.awsSecretKey);		
+		var AWSClient = createObject("java",'com.amazonaws.services.elasticache.AmazonElastiCacheClient').init(AWSCredentials);
+		
+		var DescribeCacheClustersRequest = createObject("java","com.amazonaws.services.elasticache.model.DescribeCacheClustersRequest");
+		DescribeCacheClustersRequest.setShowCacheNodeInfo(true);
+		
+		var CacheClusters = AWSClient.describeCacheClusters(DescribeCacheClustersRequest).getCacheClusters();//.getCacheClusters();
+		var C = AWSClient.describeCacheClusters();
+					
+		var nodes = [];
+		for(var CacheCluster in CacheClusters)
+			for(var n in CacheCluster.getCacheNodes())
+				arrayAppend(nodes,N.getEndpoint().getAddress() & ':' & N.getEndpoint().getPort());
+		
+		return arrayToList(nodes,' ');
 	}
 	
 	private function debug(string m)
