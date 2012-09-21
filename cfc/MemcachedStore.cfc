@@ -2,6 +2,7 @@
 Author 	    : 	Aaron Greenlee
 				This work is licensed under a Creative Commons Attribution-Share-Alike 3.0 Unported License
 				http://wreckingballmedia.com/
+
 				
 Description : 	A ColdBox ObjectStore that supports the Memcached database as
 				well as the Amazone ElastiCache service.
@@ -108,12 +109,14 @@ implements="coldbox.system.cache.store.IObjectStore"
 				,errorCode='MemcachedStore.InvalidEndpoints'
 			);
 		
+		/*
 		if (!listContainsNoCase(variables.instance.hostname,'ec2'))
 			throw(
 			 	 message="Attempting External ElastiCache Access?"
 				,detail="It appears that you are trying to connect to an AWS ElastiCache instance from something other than an EC2. This just won't do! ElastiCache connections are only available within the AWS cloud. If you think this is an error please report it. The good news is that we detected cache nodes so things appear to be working properly."
 				,errorCode="MemcachedStore.AWSExternal");
-			
+		*/
+
 		variables.instance.indexer = createObject("component","#variables.config.dotNotationPathToCFCs#.MemcachedIndexer").init("");
 
 		debug("MemcachedStore:init();");
