@@ -470,7 +470,19 @@ implements="coldbox.system.cache.store.IObjectStore"
 		if (!isNull(result))
 		{
 			var futureTask = createObject("component","#variables.config.dotNotationPathToCFCs#.FutureTask").init(result);
-			var result = futureTask.get(timeout=arguments.timeout,timeoutUnit=arguments.timeoutUnit);
+			
+			try {
+				var result = futureTask.get(timeout=arguments.timeout,timeoutUnit=arguments.timeoutUnit);
+			} catch (any e) {
+				if (structKeyExists(URL,'debug')) 
+				{
+					throw(
+						message = e.message
+						detail=e.detail & " :; Endpoints are #variables.config.endpoints#"
+					);
+					abort;
+				}
+			}
 		}
 		
 		if (isNull(result)) return JavaCast("null","");
