@@ -276,7 +276,15 @@ implements="coldbox.system.cache.store.IObjectStore"
 		if (!structKeyExists(variables.config,'endpoints') || trim(len(variables.config.endpoints)) == 0);
 		if (!structKeyExists(variables.instance,'AddrUtil')) variables.instance.addrUtil = build("AddrUtil").init();
 
-		variables.instance.memcached = build("MemcachedClient").init(variables.instance.addrUtil.getAddresses(variables.config.endpoints));
+		try {
+			variables.instance.memcached = build("MemcachedClient").init(variables.instance.addrUtil.getAddresses(variables.config.endpoints));
+		} catch (any e) {
+			throw(
+				message="Error creating Memcached client!"
+				detail="Error creating memcached client Java object. This is usually due to an inability to make a network connection to your Memcached server. Please check your firewall settings. Trying to connect to: #variables.config.endpoints#."
+				errorCode="MemcachedStore.ObjectInstatiationException"
+			);
+		}
 		variables.instance.timeUnit = build("TimeUnit");
 		variables.instance.transcoder = variables.instance.memcached.getTranscoder();
 	
