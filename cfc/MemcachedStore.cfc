@@ -140,7 +140,7 @@ implements="coldbox.system.cache.store.IObjectStore"
 	}
 	public any function getIndexer()
 	{
-		debug("MemcachedStore:getIndexer();");
+		//debug("MemcachedStore:getIndexer();");
 		return variables.instance.indexer;
 	}
 	public any function getKeys()
