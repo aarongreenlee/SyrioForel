@@ -167,7 +167,7 @@ implements="coldbox.system.cache.store.IObjectStore"
 	public void function expireObject(
 		required any objectKey
 	){
-		delete(objectKey=arguments.objectKey);
+		return;
 	}
 	public any function isExpired(
 		required any objectKey
