@@ -292,7 +292,7 @@ Description :
 	<!--- Get multiple objects from the cache --->
 	<cffunction name="getMulti" access="public" output="false" returntype="any" hint="The returned value is a structure of name-value pairs of all the keys that where found. Not found values will not be returned" colddoc:generic="struct">
 		<!--- ************************************************************* --->
-		<cfargument name="keys" 		type="any" 		required="true" hint="The comma delimited list or array of keys to retrieve from the cache.">
+		<cfargument name="keys" 		type="any" 	required="true" hint="The comma delimited list or array of keys to retrieve from the cache.">
 		<cfargument name="prefix"		type="any" 	required="false" default="" hint="A prefix to prepend to the keys">
 		<!--- ************************************************************* --->
 		<cfscript>
@@ -300,12 +300,20 @@ Description :
 			var thisKey = "";
 			
 			// Normalize keys
-			if( isArray(arguments.keys) ){
-				arguments.keys = arrayToList( arguments.keys );
-			}
+			if;
 			
 			// Clear Prefix
 			arguments.prefix = trim(arguments.prefix);
+			
+			// Update each key with the prefix if needed
+			if (len(trim(arguments.prefix)) == 0)
+			{
+				var finalizedKeys = (isArray(arguments.keys)) ? arguments.keys : listToArray(arguments.keys);
+			} else {
+				var tempKeys = (isArray(arguments.keys)) ? arguments.keys : listToArray(arguments.keys);
+				var finalizedKeys = [];
+				for(var k in tempKeys) arrayAppend(finalizedKeys,arguments.prefix & k);
+			}
 			
 			// Loop keys
 			for(var x=1;x lte listLen(arguments.keys);x++)

@@ -53,6 +53,8 @@ implements="coldbox.system.cache.store.IObjectStore"
 		// Flag to determine if we've activated an instance of Memcache...
 		variables.active = false;
 		
+		application.memcachedCounter = 0;
+		
 		// Import the configuration options from the ColdBox CacheProvider
 		var config = arguments.cacheProvider.getConfiguration();
 		
@@ -157,6 +159,8 @@ implements="coldbox.system.cache.store.IObjectStore"
 	public any function get(
 		required any objectKey
 	){
+		if (isArray(arguments.objectKey)) return blockingBulkGet(keys=arguments.objectKey);
+		
 		return blockingGet(arguments.objectKey);
 	}
 	public any function getQuiet(
@@ -473,15 +477,9 @@ implements="coldbox.system.cache.store.IObjectStore"
 			
 			try {
 				var result = futureTask.get(timeout=arguments.timeout,timeoutUnit=arguments.timeoutUnit);
+				application.memcachedCounter++;
 			} catch (any e) {
-				if (structKeyExists(URL,'debug')) 
-				{
-					throw(
-						message = e.message
-						detail=e.detail & " :; Endpoints are #variables.config.endpoints#"
-					);
-					abort;
-				}
+				rethrow;
 			}
 		}
 		
@@ -496,6 +494,73 @@ implements="coldbox.system.cache.store.IObjectStore"
 		
 		return result;		
 	}	
+	
+	/**
+		Get with a single key. Blocks until the server responds.
+	**/
+	private any function blockingBulkGet(
+		 required array keys
+		,numeric timeout
+		,string timeoutUnit
+	){
+		if (!structKeyExists(arguments,'timeout')) arguments.timeout = variables.config.defaultTimeoutValue;
+		if (!structKeyExists(arguments,'timeoutUnit')) arguments.timeoutUnit = variables.config.defaultTimeoutUnit;
+		
+		if (!variables.active) build("memcached");
+
+		var result = {};
+
+		// If we already looked up this value within the request just return it.
+		// This prevents double cache-hits by the ColdBox framework since it looks up
+		// a value before returning it and Memcached can't do that.		
+		if (!variables.config.skipLookupDoubleGet)
+		{
+			var keysToSeek = arguments.keys;
+		} else {
+			var requestCacheExists = structKeyExists(request,'MemcachedAccelerator');
+			if (!requestCacheExists)
+			{
+				var keysToSeek = arguments.keys;				
+			} else {
+				var keysToSeek = [];
+				// Pull any values we can from the in-request cache.
+				// Any that are missing will be requested from the Memcache server
+				for(var k in arguments.keys)
+				{
+					if (structKeyExists(request.MemcachedAccelerator,k) && !isNull(request.MemcachedAccelerator[k])) result[k] = request.MemcachedAccelerator[k];
+					else arrayAppend(keysToSeek,k);
+				}
+			}
+		}
+		
+		var result = variables.instance.memcached.asyncGetBulk(keysToSeek);	
+		
+		if (!isNull(result))
+		{
+			var futureTask = createObject("component","#variables.config.dotNotationPathToCFCs#.FutureTask").init(result);
+			
+			try {
+				var result = futureTask.get(timeout=arguments.timeout,timeoutUnit=arguments.timeoutUnit);
+				application.memcachedCounter++;
+			} catch (any e) {
+				rethrow;
+			}
+		}
+		
+		if (isNull(result)) return {};
+
+		// Cache within the request if we are accelerating our double lookups
+		if (variables.config.skipLookupDoubleGet)
+		{		
+			if (!requestCacheExists) request.MemcachedAccelerator = {};
+			
+			// Seed the request cache
+			for(var k in result) request.MemcachedAccelerator[k] = result[k];
+		}
+		
+		return result;		
+	}	
+	
 	/**
 		Shortcut to delete that will immediately delete the item from the cache. 
 		or in the delay specified. returns a future object that allows you to 

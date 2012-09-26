@@ -8,7 +8,8 @@ component
 	this.mappings = {
 		'/test' = this.root & 'test'
 		,'/app' = this.root
-		,'/mxunit' = '/C/web/mxunit'
+		,'/mxunit' = 'C:\web\adobe\atv\adobetv\lib\shared\lib\mxunit'
+		,'/coldbox' = 'C:\web\adobe\atv\adobetv\lib\coldbox'
 	};
 	
 	// Load JARs

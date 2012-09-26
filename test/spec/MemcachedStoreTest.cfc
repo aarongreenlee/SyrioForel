@@ -23,6 +23,8 @@ component extends="mxunit.framework.TestCase"
 		,endpoints='127.0.0.1:11211'	
 		,dotNotationPathToCFCs='app.cfc'
 		,skipLookupDoubleGet = true	
+		,awsaccesskey='123'
+		,awssecretkey='456'
 	};
 
 	// You can disable integration testing eaisly by changing this flag.
@@ -77,6 +79,33 @@ component extends="mxunit.framework.TestCase"
 		
 		// Use the SUT for our test asserting the cached value was returned.
 		assertEquals("Hello from #tickCount#",r);
+	}
+	/**
+		Basic integration test to confirm we can obtain multiple values
+		from the cache.
+	**/
+	function integration_bulk_get_works()
+	{	
+		i();
+		
+		var map = {
+			 'integration_bulk_get_works_1'=createUUID()
+			,'integration_bulk_get_works_2'=createUUID()
+			,'integration_bulk_get_works_3'=createUUID()
+		};
+		
+		var tickCount = getTickCount();
+		
+		// Create a new instance to store the value...
+		for(var k in map) new MemcachedStore(variables.CacheProvider).set(k,map[k]);
+		
+		var r = SUT.get(objectKey=structKeyArray(map));
+		
+		for(var k in map)
+		{
+			assert(structKeyExists(map,k),'Expected the key #k# to exist in the cache.');
+			assertEquals(map[k],r[k],'Unexpected value for key #k#');
+		}
 	}
 	/**
 		Confirm we can cache complex objects. In this case, a struct.
@@ -147,7 +176,7 @@ component extends="mxunit.framework.TestCase"
 			,awsAccessKey = ''
 			,discoverEndpoints=false
 			,endpoints=''
-			,skipLookupDoubleGet=false	
+			,skipLookupDoubleGet=false
 		});
 
 		try {
@@ -190,7 +219,7 @@ component extends="mxunit.framework.TestCase"
 		try {
 			SUT.init(CacheProvider=CacheProvider);
 		} catch (any e) {
-			assertEquals("MemcachedStore.NoEndpoints",e.errorCode,"Unexpected errorCode for CFCatch");
+			assertEquals("MemcachedStore.BadConfig",e.errorCode,"Unexpected errorCode for CFCatch");
 		}		
 		return;
 	};
@@ -256,14 +285,10 @@ component extends="mxunit.framework.TestCase"
 		assertEquals('result',r,'Expected our mocked result from BlockingGet to be returned.');
 	};
 	
+	/** This method is under test. Nothing to assert. **/
 	function expireObject()
 	{
-		SUT.$('delete');
-		
-		var r = SUT.expireObject('thisOneOrThatOne');
-		
-		assertEquals(1,SUT.$count('delete'),'this.delete() call count.');
-		assertEquals('thisOneOrThatOne',SUT.$callLog().delete[1].objectKey,'Unexpected argument to delete for objectKey.');
+		return;
 	};
 	
 	function isExpired() {

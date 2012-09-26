@@ -53,7 +53,7 @@
 	}
 	
 	function getSize() {
-		return 999;
+		return 0;
 	}
 	
 	function getSortedKeys() {
