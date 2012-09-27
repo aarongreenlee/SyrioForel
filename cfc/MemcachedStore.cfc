@@ -22,7 +22,6 @@ Description : 	A ColdBox ObjectStore that supports the Memcached database as
 component
 output=false
 hint="I work with Memcached directly to store and obtain objects from your cache. I work hared. Love me."
-implements="coldbox.system.cache.store.IObjectStore"
 {			
 	// Endpoints used by the Memcached Client.
 	variables.config =
@@ -209,6 +208,24 @@ implements="coldbox.system.cache.store.IObjectStore"
 		for(var machine in stats) r += convertHashMapToStruct(stats[machine]).total_items;
 		
 		return r;
+	}
+
+	/**
+		@timeout Defaults to no-timeout. Defines how many units of the TimeoutUnit before a timeout occurs.
+		@timeoutUnit AN instance of java.util.concurrent.TimeUnit.
+	**/
+	public any function shutdown(
+		 numeric timeout=0
+		,string timeoutUnit
+	){
+		if (!variables.active || !structKeyExists(variables.instance,'memcached')) return false;
+				
+		if (!structKeyExists(arguments,'timeoutUnit')) arguments.timeoutUnit = variables.config.defaultRequestTimeout;
+
+		if (arguments.timeout > 0) return variables.instance.memcached.shutdown(arguments.timeout,arguments.timeUnit);
+		
+		variables.active = false;
+		return variables.instance.memcached.shutdown();
 	}
 
 	// -------------------------------------------------------------------------
@@ -615,24 +632,6 @@ implements="coldbox.system.cache.store.IObjectStore"
 		return createObject("component","#variables.config.dotNotationPathToCFCs#.FutureTask").init(ret);
 	}
 	
-	/**
-		@timeout Defaults to no-timeout. Defines how many units of the TimeoutUnit before a timeout occurs.
-		@timeoutUnit AN instance of java.util.concurrent.TimeUnit.
-	**/
-	private any function shutdown(
-		 numeric timeout=0
-		,string timeoutUnit
-	){
-		if (!variables.active || !structKeyExists(variables.instance,'memcached')) return false;
-				
-		if (!structKeyExists(arguments,'timeoutUnit')) arguments.timeoutUnit = variables.config.defaultRequestTimeout;
-
-		if (arguments.timeout > 0) return variables.instance.memcached.shutdown(arguments.timeout,arguments.timeUnit);
-		
-		variables.active = false;
-		return variables.instance.memcached.shutdown();
-	}
-	
 	private struct function convertHashMapToStruct(required hashMap)
 	{
 		var theStruct = structNew();
@@ -684,7 +683,7 @@ implements="coldbox.system.cache.store.IObjectStore"
 	
 	private function debug(string m)
 	{ 
-		writeDump(var="------> " & arguments.m,output='Console');
+		//writeDump(var="------> " & arguments.m,output='Console');
 	}
 }
 
