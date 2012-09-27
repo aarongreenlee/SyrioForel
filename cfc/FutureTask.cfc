@@ -89,9 +89,10 @@
 					var ret = deserialize(ret);
 				}
 			} catch(Any e)	{
-				rethrow;
 				var ret = JavaCast("null",'');
 				cancel();
+				if (structKeyExists(e,'message') && listContainsNoCase(e.message,'timed')) throw(message="Memcached Connection Timeout",detail="The Memcached server appears to be unavailable or overloaded. Please ensure it is running.");
+				else rethrow();
 			}
 		</cfscript>
 		
@@ -103,8 +104,7 @@
 
 	</cffunction> 
 
-	<!--- ONCE IN _BASE --->
-<cffunction name="setDefaultTimeoutUnit" access="public" output="false" returntype="boolean">
+	<cffunction name="setDefaultTimeoutUnit" access="public" output="false" returntype="boolean">
 		<cfargument name="timeoutUnit" type="string" required="false" default="MILLISECONDS"/>
 		<cfset var isSet = false>
 		<cfif listfind("MILLISECONDS,NANOSECONDS,MICROSECONDS,SECONDS",ucase(arguments.timeoutUnit))>
