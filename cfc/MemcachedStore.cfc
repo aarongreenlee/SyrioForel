@@ -52,8 +52,6 @@ hint="I work with Memcached directly to store and obtain objects from your cache
 		// Flag to determine if we've activated an instance of Memcache...
 		variables.active = false;
 		
-		application.memcachedCounter = 0;
-		
 		// Import the configuration options from the ColdBox CacheProvider
 		var config = arguments.cacheProvider.getConfiguration();
 		
@@ -494,7 +492,6 @@ hint="I work with Memcached directly to store and obtain objects from your cache
 			
 			try {
 				var result = futureTask.get(timeout=arguments.timeout,timeoutUnit=arguments.timeoutUnit);
-				application.memcachedCounter++;
 			} catch (any e) {
 				rethrow;
 			}
@@ -558,7 +555,6 @@ hint="I work with Memcached directly to store and obtain objects from your cache
 			
 			try {
 				var result = futureTask.get(timeout=arguments.timeout,timeoutUnit=arguments.timeoutUnit);
-				application.memcachedCounter++;
 			} catch (any e) {
 				rethrow;
 			}
