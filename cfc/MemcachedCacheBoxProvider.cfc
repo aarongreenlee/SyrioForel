@@ -33,7 +33,7 @@ Description :
 				reapFrequency = 0,
 				freeMemoryPercentageThreshold = 0,
 				evictionPolicy = "LRU",
-				evictCount = 1,
+				evictCount = 0,
 				maxObjects = 200,
 				objectStore = "MemcachedStore",
 				coldboxEnabled = false
@@ -251,7 +251,7 @@ Description :
 		<cfargument name="objectKey" type="any" required="true" hint="The key of the object to lookup.">
 		<cfscript>
 			// cleanup the key
-			arguments.objectKey = lcase(arguments.objectKey);
+			arguments.objectKey = standardizeKeys(arguments.objectKey);
 			
 			return instance.objectStore.lookup( arguments.objectKey );
 		</cfscript>
@@ -279,7 +279,7 @@ Description :
 			var refLocal = {};
 			
 			// cleanup the key
-			arguments.objectKey = lcase(arguments.objectKey);
+			arguments.objectKey = standardizeKeys(arguments.objectKey);
 			
 			// get object from store
 			refLocal.results = instance.objectStore.get( arguments.objectKey );
@@ -299,14 +299,13 @@ Description :
 			var returnStruct = structnew();
 			var thisKey = "";
 			
-			// Normalize keys
-			if;
-			
 			// Clear Prefix
 			arguments.prefix = trim(arguments.prefix);
 			
+			var prefixExists = len(trim(arguments.prefix)) > 0;
+			
 			// Update each key with the prefix if needed
-			if (len(trim(arguments.prefix)) == 0)
+			if (prefixExists)
 			{
 				var finalizedKeys = (isArray(arguments.keys)) ? arguments.keys : listToArray(arguments.keys);
 			} else {
@@ -315,18 +314,7 @@ Description :
 				for(var k in tempKeys) arrayAppend(finalizedKeys,arguments.prefix & k);
 			}
 			
-			// Loop keys
-			for(var x=1;x lte listLen(arguments.keys);x++)
-			{
-				thisKey = arguments.prefix & listGetAt(arguments.keys,x);
-				
-				if( lookup(thisKey) )
-				{
-					returnStruct[thiskey] = get(thisKey);
-				}
-			}
-			
-			return returnStruct;
+			return get(finalizedKeys);
 		</cfscript>
 	</cffunction>
 			
@@ -446,7 +434,7 @@ Description :
 			var iData 			= {};
 		
 			// cleanup the key
-			arguments.objectKey = lcase(arguments.objectKey);
+			arguments.objectKey = standardizeKeys(arguments.objectKey);
 								
 			// Provider Default Timeout checks
 			if( NOT len(arguments.timeout) OR NOT isNumeric(arguments.timeout) ){
@@ -515,7 +503,7 @@ Description :
 		<cfargument name="objectKey" type="any"  	required="true" hint="The object cache key">
 		<cfscript>
 			// clean key
-			arguments.objectKey = lcase(trim(arguments.objectKey));
+			arguments.objectKey = standardizeKeys(arguments.objectKey);
 			
 			// clear key
 			return instance.objectStore.clear( arguments.objectKey );
@@ -635,5 +623,17 @@ Description :
 	<!--- Get the Java Runtime --->
 	<cffunction name="getJavaRuntime" access="public" returntype="any" output="false" hint="Get the java runtime object for reporting purposes.">
 		<cfreturn />
+	</cffunction>
+	
+	<cffunction name="standardizeKeys" access="private">
+		<cfargument name="key" type="any" hint="Accepts an array or a string." />
+		<cfscript>
+			if (!isArray(arguments.key)) return ucase(trim(arguments.key));
+			
+			var r = [];
+			for(var k in arguments.key) arrayAppend(r,ucase(trim(k)));
+			
+			return r;
+		</cfscript>
 	</cffunction>
 </cfcomponent>
