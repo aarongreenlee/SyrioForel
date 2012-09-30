@@ -91,8 +91,7 @@
 			} catch(Any e)	{
 				var ret = JavaCast("null",'');
 				cancel();
-				if (structKeyExists(e,'message') && listContainsNoCase(e.message,'timed')) throw(message="Memcached Connection Timeout",detail="The Memcached server appears to be unavailable or overloaded. Please ensure it is running.");
-				else rethrow();
+				rethrow;
 			}
 		</cfscript>
 		

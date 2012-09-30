@@ -556,6 +556,7 @@ hint="I work with Memcached directly to store and obtain objects from your cache
 			try {
 				var result = futureTask.get(timeout=arguments.timeout,timeoutUnit=arguments.timeoutUnit);
 			} catch (any e) {
+				if (structKeyExists(e,'message') && listContainsNoCase(e.message,'timed')) throw(message="Memcached Connection Timeout",detail="The Memcached server appears to be unavailable or overloaded. Please ensure it is running. The attempted endoints are: #variables.config.endoints#");
 				rethrow;
 			}
 		}
