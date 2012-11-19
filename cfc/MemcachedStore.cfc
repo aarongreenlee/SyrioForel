@@ -45,7 +45,7 @@ hint="I work with Memcached directly to store and obtain objects from your cache
 	public MemcachedStore function init(required cacheProvider)
 	{
 		var startTick = getTickCount();
-		var JavaSystem = CreateObject("java", "java.lang.System");
+		variables.JavaSystem = CreateObject("java", "java.lang.System");
 
 		JavaSystem.out.println("SyrioForel: Starting to load ColdFusion Memcached connector...");
 
@@ -59,7 +59,7 @@ hint="I work with Memcached directly to store and obtain objects from your cache
 		
 		// Import the configuration options from the ColdBox CacheProvider
 		var config = arguments.cacheProvider.getConfiguration();
-		
+
 		// Verify the imported config has the keys we need
 		var requiredConfigKeys = ['awsSecretKey','awsAccessKey','discoverEndpoints','endpoints','skipLookupDoubleGet'];
 		var missingKeys = [];
@@ -86,12 +86,13 @@ hint="I work with Memcached directly to store and obtain objects from your cache
 				,detail="You have specified you do not want the MemcachedStore to discover endpoints using your AWS credentials; however, you have not provided any endpoints. The MemcachedStore won't know which server to talk to!"
 				,errorCode='MemcachedStore.ServerLockout'
 			);
-		//
-		
+
 		var attemptedDiscover = false;
 		JavaSystem.out.println("SyrioForel: Discover Endpoints? #config.discoverEndpoints#");
-		if (config.discoverEndpoints)
-		{			
+		if (!config.discoverEndpoints)
+		{
+			variables.config.endpoints = config.endpoints;
+		} else {
 			variables.config.endpoints = discoverAWSEndpoints(config);
 			attemptedDiscover=true;
 		}
