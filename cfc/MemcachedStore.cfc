@@ -44,6 +44,11 @@ hint="I work with Memcached directly to store and obtain objects from your cache
 	**/
 	public MemcachedStore function init(required cacheProvider)
 	{
+		var startTick = getTickCount();
+		var JavaSystem = CreateObject("java", "java.lang.System");
+
+		JavaSystem.out.println("SyrioForel: Starting to load ColdFusion Memcached connector...");
+
 		var strings = {
 			 badConfig = 'Invalid MemcachedStore Configuratrion'
 			,noCreate = 'Error creating MemcachedStore!'
@@ -84,12 +89,13 @@ hint="I work with Memcached directly to store and obtain objects from your cache
 		//
 		
 		var attemptedDiscover = false;
+		JavaSystem.out.println("SyrioForel: Discover Endpoints? #config.discoverEndpoints#");
 		if (config.discoverEndpoints)
 		{			
 			variables.config.endpoints = discoverAWSEndpoints(config);
 			attemptedDiscover=true;
-		}		
-		
+		}
+
 		// Do we have valid endpoint's yet? 
 		if (len(trim(variables.config.endpoints)) == 0)
 			throw(
@@ -107,7 +113,9 @@ hint="I work with Memcached directly to store and obtain objects from your cache
 				,detail='The following endpoint(s) do not appear to be valid. Expecting something like 127.0.0.1:{11233} or aws-really-long-128.00.11.11-name.elasticache.com. The rejected endpoints are #arrayToList(invalidEndpoints)#.'
 				,errorCode='MemcachedStore.InvalidEndpoints'
 			);
-		
+
+		JavaSystem.out.println("SyrioForel: Endpoints Discovered: #variables.config.endpoint#");
+
 		/*
 		if (!listContainsNoCase(variables.instance.hostname,'ec2'))
 			throw(
@@ -119,6 +127,8 @@ hint="I work with Memcached directly to store and obtain objects from your cache
 		variables.instance.indexer = createObject("component","#variables.config.dotNotationPathToCFCs#.MemcachedIndexer").init("");
 
 		debug("MemcachedStore:init();");
+
+		JavaSystem.out.println("SyrioForel loaded in #getTickCount()-startTick#ms");
 
 		return this;	
 	}
@@ -679,8 +689,8 @@ hint="I work with Memcached directly to store and obtain objects from your cache
 	}
 	
 	private function debug(string m)
-	{ 
-		//writeDump(var="------> " & arguments.m,output='Console');
+	{
+		JavaSystem.out.println("SyrioForel: Debug: #arguments.m#");
 	}
 }
 
