@@ -114,7 +114,7 @@ hint="I work with Memcached directly to store and obtain objects from your cache
 				,errorCode='MemcachedStore.InvalidEndpoints'
 			);
 
-		JavaSystem.out.println("SyrioForel: Endpoints Discovered: #variables.config.endpoint#");
+		JavaSystem.out.println("SyrioForel: Endpoints Discovered: #variables.config.endpoints#");
 
 		/*
 		if (!listContainsNoCase(variables.instance.hostname,'ec2'))
