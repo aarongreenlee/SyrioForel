@@ -127,8 +127,6 @@ hint="I work with Memcached directly to store and obtain objects from your cache
 
 		variables.instance.indexer = createObject("component","#variables.config.dotNotationPathToCFCs#.MemcachedIndexer").init("");
 
-		debug("MemcachedStore:init();");
-
 		JavaSystem.out.println("SyrioForel loaded in #getTickCount()-startTick#ms");
 
 		return this;	
@@ -567,7 +565,7 @@ hint="I work with Memcached directly to store and obtain objects from your cache
 			try {
 				var result = futureTask.get(timeout=arguments.timeout,timeoutUnit=arguments.timeoutUnit);
 			} catch (any e) {
-				if (structKeyExists(e,'message') && listContainsNoCase(e.message,'timed')) throw(message="Memcached Connection Timeout",detail="The Memcached server appears to be unavailable or overloaded. Please ensure it is running. The attempted endoints are: #variables.config.endoints#");
+				if (structKeyExists(e,'message') && listContainsNoCase(e.message,'timed')) throw(message="Memcached Connection Timeout",detail="The Memcached server appears to be unavailable or overloaded. Please ensure it is running. The attempted endoints are: #structKeyExists(variables.config,'endoints') ? variables.config.endpoints : '_variables.config.endpoints is undefined_'#");
 				rethrow;
 			}
 		}
