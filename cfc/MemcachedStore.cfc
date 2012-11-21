@@ -3,26 +3,26 @@ Author 	    : 	Aaron Greenlee
 				This work is licensed under a Creative Commons Attribution-Share-Alike 3.0 Unported License
 				http://wreckingballmedia.com/
 
-				
+
 Description : 	A ColdBox ObjectStore that supports the Memcached database as
 				well as the Amazone ElastiCache service.
-					
+
 				Many thanks go to Job Hurschi for his contribution to our
 				community with the release of cfmemcached (download it at:
 				http://cfmemcached.riaforge.org/) with which this source code
 				is based.
-				
+
 				Access the Java Memcached Client Docs
 				http://dustin.github.com/java-memcached-client/apidocs/
-				
-				 
+
+
 ------------------------------------------------------------------------------*/
 
 /** CacheBox Object Store supporting native Memcached and Amazon ElastiCache. **/
 component
 output=false
 hint="I work with Memcached directly to store and obtain objects from your cache. I work hared. Love me."
-{			
+{
 	// Endpoints used by the Memcached Client.
 	variables.config =
 	{
@@ -32,8 +32,9 @@ hint="I work with Memcached directly to store and obtain objects from your cache
 		,'defaultTimeoutValue' = 500
 		,'dotNotationPathToCFCs' = ''
 		,'skipLookupDoubleGet' = true
+		,'environment' = 'production'
 	};
-	
+
 	variables.instance = {
 		 aws = {}
 		,hostname = createObject('java','java.net.InetAddress').getLocalHost().getHostName()
@@ -53,21 +54,21 @@ hint="I work with Memcached directly to store and obtain objects from your cache
 			 badConfig = 'Invalid MemcachedStore Configuratrion'
 			,noCreate = 'Error creating MemcachedStore!'
 		};
-		
+
 		// Flag to determine if we've activated an instance of Memcache...
 		variables.active = false;
-		
+
 		// Import the configuration options from the ColdBox CacheProvider
 		var config = arguments.cacheProvider.getConfiguration();
 
 		// Verify the imported config has the keys we need
-		var requiredConfigKeys = ['awsSecretKey','awsAccessKey','discoverEndpoints','endpoints','skipLookupDoubleGet'];
+		var requiredConfigKeys = ['awsSecretKey','awsAccessKey','discoverEndpoints','endpoints','skipLookupDoubleGet','environment'];
 		var missingKeys = [];
 		for(var k in requiredConfigKeys) if (!structKeyExists(config,k)) arrayAppend(missingKeys,k);
 
 		// Save our instance copy of the config.
 		structAppend(variables.config,config,true);
-		
+
 		// Validate the config...
 		//
 		// Require All Config Keys
@@ -97,7 +98,7 @@ hint="I work with Memcached directly to store and obtain objects from your cache
 			attemptedDiscover=true;
 		}
 
-		// Do we have valid endpoint's yet? 
+		// Do we have valid endpoint's yet?
 		if (len(trim(variables.config.endpoints)) == 0)
 			throw(
 				 message=(attemptedDiscover) ?  "MemcachedStore was unable to discover endpoints!" : "MemcachedStore was unable to determine endpoints from config file!"
@@ -107,7 +108,7 @@ hint="I work with Memcached directly to store and obtain objects from your cache
 		//
 		// Are all endpoints valid?
 		var invalidEndpoints = [];
-		for(var endpoint in listToArray(variables.config.endpoints,' ') ) if (listLen(endpoint,':') != 2 || !isNumeric(listLast(endpoint,':'))) arrayAppend(invalidEndpoints,endpoint); 
+		for(var endpoint in listToArray(variables.config.endpoints,' ') ) if (listLen(endpoint,':') != 2 || !isNumeric(listLast(endpoint,':'))) arrayAppend(invalidEndpoints,endpoint);
 		if (!arrayIsEmpty(invalidEndpoints))
 			throw(
 				 message="MemcachedStore rejected endpoints."
@@ -129,9 +130,9 @@ hint="I work with Memcached directly to store and obtain objects from your cache
 
 		JavaSystem.out.println("SyrioForel loaded in #getTickCount()-startTick#ms");
 
-		return this;	
+		return this;
 	}
-	
+
 	public void function flush(){
 		debug("MemcachedStore:Flush();");
 		variables.instance.memcached.flush();
@@ -143,7 +144,7 @@ hint="I work with Memcached directly to store and obtain objects from your cache
 	{
 		// Ensure Memcached Exists
 		if (!variables.active) build("memcached");
-		
+
 		debug("MemcachedStore:ClearAll();");
 	}
 	public any function getIndexer()
@@ -154,7 +155,7 @@ hint="I work with Memcached directly to store and obtain objects from your cache
 	public any function getKeys()
 	{
 		debug("MemcachedStore:getKeys();");
-		
+
 		return ['Unsupported by Memcached'];
 	}
 	public any function lookup(
@@ -165,14 +166,14 @@ hint="I work with Memcached directly to store and obtain objects from your cache
 	public any function get(
 		required any objectKey
 	){
-		if (isArray(arguments.objectKey)) return blockingBulkGet(keys=arguments.objectKey);
-		
-		return blockingGet(arguments.objectKey);
+		if (isArray(arguments.objectKey)) return blockingBulkGet(keys=parseKey(arguments.objectKey));
+
+		return blockingGet(parseKey(arguments.objectKey));
 	}
 	public any function getQuiet(
 		required any objectKey
 	){
-		return blockingGet(arguments.objectKey);
+		return blockingGet(parseKey(arguments.objectKey));
 	}
 	public void function expireObject(
 		required any objectKey
@@ -184,20 +185,20 @@ hint="I work with Memcached directly to store and obtain objects from your cache
 	){
 		return true;
 	}
-	
+
 	public void function set(
 		 required any objectKey
 		,required any object
 		,any timeout=35
 		,any lastAccessTimeout=''
 		,any extras
-	){	
+	){
 		blockingSet(
-			 key=arguments.objectKey
+			 key=parseKey(arguments.objectKey)
 			,value=arguments.object
 			,expiry=500
 		);
-		
+
 		return;
 	}
 	public any function clear(
@@ -208,12 +209,12 @@ hint="I work with Memcached directly to store and obtain objects from your cache
 	/** Return the number of items stored within Memcached. **/
 	public any function getSize(){
 		if (!variables.active) build("memcached");
-		
+
 		var stats = convertHashMapToStruct(variables.instance.Memcached.getStats());
 		//writeDump(stats);abort;
 		var r = 0;
 		for(var machine in stats) r += convertHashMapToStruct(stats[machine]).total_items;
-		
+
 		return r;
 	}
 
@@ -226,11 +227,11 @@ hint="I work with Memcached directly to store and obtain objects from your cache
 		,string timeoutUnit
 	){
 		if (!variables.active || !structKeyExists(variables.instance,'memcached')) return false;
-				
+
 		if (!structKeyExists(arguments,'timeoutUnit')) arguments.timeoutUnit = variables.config.defaultRequestTimeout;
 
 		if (arguments.timeout > 0) return variables.instance.memcached.shutdown(arguments.timeout,arguments.timeUnit);
-		
+
 		variables.active = false;
 		return variables.instance.memcached.shutdown();
 	}
@@ -238,18 +239,18 @@ hint="I work with Memcached directly to store and obtain objects from your cache
 	// -------------------------------------------------------------------------
 	// PRIVATE
 	// -------------------------------------------------------------------------
-	
+
 	/**
 		A mini factory to build objects. Ensures only one Singleton is created
 		for our Memcached client and acts as a proxy for other builds to help
 		facilitate unit testing.
-		
+
 		@alias An alias for the factory.
 	**/
 	private any function build(required string alias){
 		switch(arguments.alias)
 		{
-			// Special handling for our Memcached interface to ensure we 
+			// Special handling for our Memcached interface to ensure we
 			// only create one singleton.
 			case 'memcached':
 				// Does this singleton exist? If so, just return.
@@ -260,7 +261,7 @@ hint="I work with Memcached directly to store and obtain objects from your cache
 				{
 					// If we were queued we don't need to create...
 					if (structKeyExists(variables.instance,'Memcached')) return variables.instance[arguments.alias];
-					
+
 					// Build it!
 					lock name="MemcachedStoreBuilding#arguments.alias#_StepTwo" timeout="25"
 					{
@@ -286,18 +287,18 @@ hint="I work with Memcached directly to store and obtain objects from your cache
 			break;
 			case 'FutureTask':
 				return createObject("component","#variables.config.dotNotationPathToCFCs#.FutureTask");
-			break;			
-			
+			break;
+
 			default:
 				throw(message="MemcachedStore internalFactory was unable to produce!",detail="Trying to produce alias #arguments.alias#");
 			break;
 		}
 	}
-	
+
 	/**
 		Build a new Memcached client instance. The result is saved within the
 		instance of this MemcachedStore and returned by this method.
-		
+
 		@servers A space delimited list of servers the Memcached client should connect to.
 	**/
 	private any function buildMemcached(){
@@ -315,12 +316,12 @@ hint="I work with Memcached directly to store and obtain objects from your cache
 		}
 		variables.instance.timeUnit = build("TimeUnit");
 		variables.instance.transcoder = variables.instance.memcached.getTranscoder();
-	
+
 		variables.active = true;
-	
+
 		return variables.instance.memcached;
 	}
-	
+
 	/** Convert the configured time unit into a Java Time Unit type. **/
 	private any function getTimeUnitType(required string timeUnit)
 	{
@@ -329,36 +330,36 @@ hint="I work with Memcached directly to store and obtain objects from your cache
 			case 'nanoseconds' : return variables.timeunit.NANOSECONDS; break;
 			case 'microseconds' : return variables.timeunit.MICROSECONDS; break;
 			case 'milliseconds' : return variables.timeunit.MILLISECONDS; break;
-			
+
 			case 'SECONDS' :
 			default :
 				return variables.timeunit.SECONDS;
-			break; 
+			break;
 		}
 	}
-	
+
 	/** Serialize objects for storage in Memcached. Returns simple objects
 		as-is, otherwise, converts objects into a ByteArray. **/
 	private any function serialize(required any value)
 	{
 		if (isSimpleValue(arguments.value))	return arguments.value;
-		
+
 		var ByteArrayOutputStream = build("ByteArrayOutputStream").init();
 		var ObjectOutputStream = build("ObjectOutputStream").init(ByteArrayOutputStream);
-		
+
 		ObjectOutputStream.writeObject(arguments.value);
 		var result = ByteArrayOutputStream.toByteArray();
-		
+
 		ObjectOutputStream.close();
 		ByteArrayOutputStream.close();
-		
+
 		return result;
 	}
-	
+
 	/** Deserializes the given value from a byte stream.
 		Includes support for multiple keys being returned
-		
-		@value The value to deserialize. 
+
+		@value The value to deserialize.
 	**/
 	private any function deserialize()
 	{
@@ -394,14 +395,14 @@ hint="I work with Memcached directly to store and obtain objects from your cache
 				try	{
 					// this try is necessary because null values can be returned
 					// from java and this is the only way we have to check for them
-					arrayAppend(ret,doDeserialize(arguments.value[i],objInputStream,byteInStream));	
+					arrayAppend(ret,doDeserialize(arguments.value[i],objInputStream,byteInStream));
 				} catch (Any excpt)	{
 					arrayAppend(ret,"");
 				}
 			}
 		} else {
 			// we either got a simple value here or we've gotten nothing returned
-			// if we get an empty value, then we pretty much assume that it's 
+			// if we get an empty value, then we pretty much assume that it's
 			// a bum value and we'll return a false
 			try {
 				ret = doDeserialize(arguments.value,objInputStream,byteInStream);
@@ -410,23 +411,23 @@ hint="I work with Memcached directly to store and obtain objects from your cache
 			}
 		}
 	}
-	
+
 	/**
 		Add an object to the cache if it does not exist already. Returns a
 		future representing the processing of this operation.
-		
+
 		@key The key to cache. Keys are case-sensitive.
 		@value The value to cache.
-		@expiry The exp value is passed along to memcached exactly as given, and will be processed per 
-		the memcached protocol specification: 
+		@expiry The exp value is passed along to memcached exactly as given, and will be processed per
+		the memcached protocol specification:
 
-		The actual value sent may either be Unix time 
-		(number of seconds since January 1, 1970, as a 32-bit value), 
-		or a number of seconds starting from current time. 
-		In the latter case, this number of seconds may not 
-		exceed 60*60*24*30 (number of seconds in 30 days); 
-		if the number sent by a client is larger than that, the server will consider it to be 
-		real Unix time value rather than an offset from current time. 
+		The actual value sent may either be Unix time
+		(number of seconds since January 1, 1970, as a 32-bit value),
+		or a number of seconds starting from current time.
+		In the latter case, this number of seconds may not
+		exceed 60*60*24*30 (number of seconds in 30 days);
+		if the number sent by a client is larger than that, the server will consider it to be
+		real Unix time value rather than an offset from current time.
 	**/
 	private function add(
 		 required string key
@@ -445,14 +446,14 @@ hint="I work with Memcached directly to store and obtain objects from your cache
 		}
 		return build("futuretask").init(ret);
 	}
-	
-	/** 
+
+	/**
 		Get the given key asynchronously. returns the future value of those keys
 		what you get back wht you use this function is an object that has the future value
 		of the key you asked to retrieve.  You can check at anytime to see if the value has been
-		retrieved by using the  ret.isDone() method. once you get a true from that value, you 
+		retrieved by using the  ret.isDone() method. once you get a true from that value, you
 		need to then call the ret.get() function.
-		
+
 		@key Given a key, get the value for the key asnycronously. Case-Sensitive.
 	**/
 	private any function asyncGet(required string key)
@@ -471,7 +472,7 @@ hint="I work with Memcached directly to store and obtain objects from your cache
 		}
 		return createObject("component","#variables.config.dotNotationPathToCFCs#.FutureTask").init(ret);
 	}
-	
+
 	/**
 		Get with a single key. Blocks until the server responds.
 	**/
@@ -482,42 +483,42 @@ hint="I work with Memcached directly to store and obtain objects from your cache
 	){
 		if (!structKeyExists(arguments,'timeout')) arguments.timeout = variables.config.defaultTimeoutValue;
 		if (!structKeyExists(arguments,'timeoutUnit')) arguments.timeoutUnit = variables.config.defaultTimeoutUnit;
-		
+
 		if (!variables.active) build("memcached");
 
 		// If we already looked up this value within the request just return it.
 		// This prevents double cache-hits by the ColdBox framework since it looks up
-		// a value before returning it and Memcached can't do that.		
+		// a value before returning it and Memcached can't do that.
 		if (variables.config.skipLookupDoubleGet)
 		{
 			var requestCacheExists = structKeyExists(request,'MemcachedAccelerator');
 			if (requestCacheExists && structKeyExists(request.MemcachedAccelerator,arguments.key) && !isNull(request.MemcachedAccelerator[arguments.key])) return request.MemcachedAccelerator[arguments.key];
 		}
-		
-		var result = variables.instance.memcached.asyncGet(arguments.key);	
+
+		var result = variables.instance.memcached.asyncGet(arguments.key);
 		if (!isNull(result))
 		{
 			var futureTask = createObject("component","#variables.config.dotNotationPathToCFCs#.FutureTask").init(result);
-			
+
 			try {
 				var result = futureTask.get(timeout=arguments.timeout,timeoutUnit=arguments.timeoutUnit);
 			} catch (any e) {
 				rethrow;
 			}
 		}
-		
+
 		if (isNull(result)) return JavaCast("null","");
 
 		// Cache within the request if we are accelerating our double lookups
 		if (variables.config.skipLookupDoubleGet)
-		{		
+		{
 			if (!requestCacheExists) request.MemcachedAccelerator = {};
 			request.MemcachedAccelerator[arguments.key] = result;
 		}
-		
-		return result;		
-	}	
-	
+
+		return result;
+	}
+
 	/**
 		Get with a single key. Blocks until the server responds.
 	**/
@@ -528,14 +529,14 @@ hint="I work with Memcached directly to store and obtain objects from your cache
 	){
 		if (!structKeyExists(arguments,'timeout')) arguments.timeout = variables.config.defaultTimeoutValue;
 		if (!structKeyExists(arguments,'timeoutUnit')) arguments.timeoutUnit = variables.config.defaultTimeoutUnit;
-		
+
 		if (!variables.active) build("memcached");
 
 		var result = {};
 
 		// If we already looked up this value within the request just return it.
 		// This prevents double cache-hits by the ColdBox framework since it looks up
-		// a value before returning it and Memcached can't do that.		
+		// a value before returning it and Memcached can't do that.
 		if (!variables.config.skipLookupDoubleGet)
 		{
 			var keysToSeek = arguments.keys;
@@ -543,7 +544,7 @@ hint="I work with Memcached directly to store and obtain objects from your cache
 			var requestCacheExists = structKeyExists(request,'MemcachedAccelerator');
 			if (!requestCacheExists)
 			{
-				var keysToSeek = arguments.keys;				
+				var keysToSeek = arguments.keys;
 			} else {
 				var keysToSeek = [];
 				// Pull any values we can from the in-request cache.
@@ -555,13 +556,13 @@ hint="I work with Memcached directly to store and obtain objects from your cache
 				}
 			}
 		}
-		
-		var result = variables.instance.memcached.asyncGetBulk(keysToSeek);	
-		
+
+		var result = variables.instance.memcached.asyncGetBulk(keysToSeek);
+
 		if (!isNull(result))
 		{
 			var futureTask = createObject("component","#variables.config.dotNotationPathToCFCs#.FutureTask").init(result);
-			
+
 			try {
 				var result = futureTask.get(timeout=arguments.timeout,timeoutUnit=arguments.timeoutUnit);
 			} catch (any e) {
@@ -569,24 +570,24 @@ hint="I work with Memcached directly to store and obtain objects from your cache
 				rethrow;
 			}
 		}
-		
+
 		if (isNull(result)) return {};
 
 		// Cache within the request if we are accelerating our double lookups
 		if (variables.config.skipLookupDoubleGet)
-		{		
+		{
 			if (!requestCacheExists) request.MemcachedAccelerator = {};
-			
+
 			// Seed the request cache
 			for(var k in result) request.MemcachedAccelerator[k] = result[k];
 		}
-		
-		return result;		
-	}	
-	
+
+		return result;
+	}
+
 	/**
-		Shortcut to delete that will immediately delete the item from the cache. 
-		or in the delay specified. returns a future object that allows you to 
+		Shortcut to delete that will immediately delete the item from the cache.
+		or in the delay specified. returns a future object that allows you to
 		check back on the processing further if you choose.
 	**/
 	private any function delete(
@@ -614,7 +615,7 @@ hint="I work with Memcached directly to store and obtain objects from your cache
 			return createobject("component","#variables.config.dotNotationPathToCFCs#.FutureTask").init();
 		}
 	}
-	
+
 	private any function blockingSet(
 		 required string key
 		,required any value
@@ -631,31 +632,31 @@ hint="I work with Memcached directly to store and obtain objects from your cache
 			// failing gracefully
 			ret = "";
 		}
-		
+
 		//var d = directoryList(expandPath('/app'));
 		//writeDump(d);abort;
-		
+
 		return createObject("component","#variables.config.dotNotationPathToCFCs#.FutureTask").init(ret);
 	}
-	
+
 	private struct function convertHashMapToStruct(required hashMap)
 	{
 		var theStruct = structNew();
 		var key = "";
-		var newStructKey = ""; 
+		var newStructKey = "";
 		var keys = arguments.hashMap.keySet();
 		var iter = keys.Iterator();
-		
+
 		while(iter.HasNext()) {
 			key = iter.Next();
 			newStructKey = key.toString();
 			theStruct[newStructKey] = arguments.hashMap.get(key);
 		}
-		
+
 		return theStruct;
 	}
-	
-	/** 
+
+	/**
 		Using the provided AWS Access and Secret keys this method will talk to
 		AWS and return either an empty string or a space-delemited list of the
 		cache endpoints it discovered using your credentials.
@@ -667,15 +668,15 @@ hint="I work with Memcached directly to store and obtain objects from your cache
 			throw(message="Missing AWSAccessKey and/or AWSSecretKey",detail='These properties should be provided when configuring your CacheBox Provider. These are required by the MemcachedStore when you ask to discover endpoints using your AWS credentials.',ErrorCode='MemcachedStore.BadConfig');
 
 		// Store the properties within Java so the AWS library can find them.
-		var AWSCredentials = createObject("java","com.amazonaws.auth.BasicAWSCredentials").init(arguments.config.awsAccessKey,arguments.config.awsSecretKey);		
+		var AWSCredentials = createObject("java","com.amazonaws.auth.BasicAWSCredentials").init(arguments.config.awsAccessKey,arguments.config.awsSecretKey);
 		var AWSClient = createObject("java",'com.amazonaws.services.elasticache.AmazonElastiCacheClient').init(AWSCredentials);
-		
+
 		var DescribeCacheClustersRequest = createObject("java","com.amazonaws.services.elasticache.model.DescribeCacheClustersRequest");
 		DescribeCacheClustersRequest.setShowCacheNodeInfo(true);
-		
+
 		var CacheClusters = AWSClient.describeCacheClusters(DescribeCacheClustersRequest).getCacheClusters();//.getCacheClusters();
 		var C = AWSClient.describeCacheClusters();
-					
+
 		var nodes = [];
 		for(var CacheCluster in CacheClusters)
 		{
@@ -686,7 +687,24 @@ hint="I work with Memcached directly to store and obtain objects from your cache
 		}
 		return (isNull(nodes)) ? '' : arrayToList(nodes,' ');
 	}
-	
+
+	/**
+		Appends environment information to the cached key to avoid
+		collisions between environments.
+	**/
+	private function parseKey(required any k)
+	{
+		if (isArray(arguments.k))
+		{
+			var result = [];
+			for(var key in arguments.k) arrayAppend(result,key & ':e_#variables.config.environment#');
+
+			return result;
+		}
+
+		return arguments.k & ':e_#variables.config.environment#';
+	}
+
 	private function debug(string m)
 	{
 		JavaSystem.out.println("SyrioForel: Debug: #arguments.m#");
