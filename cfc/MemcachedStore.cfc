@@ -690,19 +690,19 @@ hint="I work with Memcached directly to store and obtain objects from your cache
 
 	/**
 		Appends environment information to the cached key to avoid
-		collisions between environments.
+		collisions between environments and application names.
 	**/
 	private function parseKey(required any k)
 	{
 		if (isArray(arguments.k))
 		{
 			var result = [];
-			for(var key in arguments.k) arrayAppend(result,key & ':e_#variables.config.environment#');
+			for(var key in arguments.k) arrayAppend(result,key & ':e_#variables.config.environment##application.applicationname#');
 
 			return result;
 		}
 
-		return arguments.k & ':e_#variables.config.environment#';
+		return arguments.k & ':e_#variables.config.environment##application.applicationname#';
 	}
 
 	private function debug(string m)

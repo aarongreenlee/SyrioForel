@@ -105,7 +105,7 @@ component extends="mxunit.framework.TestCase"
 		for(var k in map)
 		{
 			assert(structKeyExists(map,k),'Expected the key #k# to exist in the cache.');
-			assertEquals(map[k],r['#k#:e_unittest'],'Unexpected value for key #k#');
+			assertEquals(map[k],r['#k#:e_unittestSyrioForel'],'Unexpected value for key #k#');
 		}
 	}
 	/**
@@ -273,7 +273,7 @@ component extends="mxunit.framework.TestCase"
 		var r = SUT.get('thisOneOrThatOne');
 
 		assertEquals(1,SUT.$count('blockingGet'),'this.blockingGet() call count.');
-		assertEquals('thisOneOrThatOne:e_unittest',SUT.$callLog().blockingGet[1][1],'Unexpected argument to blockingGet.');
+		assertEquals('thisOneOrThatOne:e_unittestSyrioForel',SUT.$callLog().blockingGet[1][1],'Unexpected argument to blockingGet.');
 		assertEquals('result',r,'Expected our mocked result from BlockingGet to be returned.');
 	};
 
@@ -284,7 +284,7 @@ component extends="mxunit.framework.TestCase"
 		var r = SUT.getQuiet('thisOneOrThatOne');
 
 		assertEquals(1,SUT.$count('blockingGet'),'this.blockingGet() call count.');
-		assertEquals('thisOneOrThatOne:e_unittest',SUT.$callLog().blockingGet[1][1],'Unexpected argument to blockingGet.');
+		assertEquals('thisOneOrThatOne:e_unittestSyrioForel',SUT.$callLog().blockingGet[1][1],'Unexpected argument to blockingGet.');
 		assertEquals('result',r,'Expected our mocked result from BlockingGet to be returned.');
 	};
 
@@ -325,12 +325,12 @@ component extends="mxunit.framework.TestCase"
 	{
 		makePublic(SUT,'parseKey');
 		var k = SUT.parseKey('abc');
-		assertEquals('abc:e_unittest',k,'Expected the environment to be appended to the key.');
+		assertEquals('abc:e_unittestSyrioForel',k,'Expected the environment to be appended to the key.');
 	}
 	function parseKey_should_append_environment_to_array_of_keys()
 	{
 		makePublic(SUT,'parseKey');
 		var k = SUT.parseKey(['Abc','easy_as_123','Or_simple_as','do_re_mi']);
-		assertEquals(['Abc:e_unittest','easy_as_123:e_unittest','Or_simple_as:e_unittest','do_re_mi:e_unittest'],k,'Expected the environment to be appended to the keys.');
+		assertEquals(['Abc:e_unittestSyrioForel','easy_as_123:e_unittestSyrioForel','Or_simple_as:e_unittestSyrioForel','do_re_mi:e_unittestSyrioForel'],k,'Expected the environment to be appended to the keys.');
 	}
 }
