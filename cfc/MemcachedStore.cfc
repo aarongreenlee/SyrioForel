@@ -33,6 +33,7 @@ hint="I work with Memcached directly to store and obtain objects from your cache
 		,'dotNotationPathToCFCs' = ''
 		,'skipLookupDoubleGet' = true
 		,'environment' = 'production'
+		,'suffix' = ''
 	};
 
 	variables.instance = {
@@ -702,7 +703,7 @@ hint="I work with Memcached directly to store and obtain objects from your cache
 			return result;
 		}
 
-		return arguments.k & ':e_#variables.config.environment##application.applicationname#';
+		return arguments.k & variables.config.suffix;
 	}
 
 	private function debug(string m)
