@@ -27,9 +27,9 @@ hint="I work with Memcached directly to store and obtain objects from your cache
 	variables.config =
 	{
 		 'endpoints' = ''
-		,'defaultTimeoutUnit' = 'MILLISECONDS'
-		,'defaultRequestTimeout' = 1200
-		,'defaultTimeoutValue' = 1200
+		,'defaultTimeoutUnit' = 'SECONDS'
+		,'defaultRequestTimeout' = 3
+		,'defaultTimeoutValue' = 3
 		,'dotNotationPathToCFCs' = ''
 		,'skipLookupDoubleGet' = true
 		,'environment' = 'production'
@@ -324,7 +324,7 @@ hint="I work with Memcached directly to store and obtain objects from your cache
 	}
 
 	/** Convert the configured time unit into a Java Time Unit type. **/
-	private any function getTimeUnitType(required string timeUnit)
+	private any function getTimeUnitType(string timeUnit="SECONDS")
 	{
 		switch(arguments.timeunit)
 		{
@@ -497,6 +497,7 @@ hint="I work with Memcached directly to store and obtain objects from your cache
 		}
 
 		var result = variables.instance.memcached.asyncGet(arguments.key);
+
 		if (!isNull(result))
 		{
 			var futureTask = createObject("component","#variables.config.dotNotationPathToCFCs#.FutureTask").init(result);
@@ -504,7 +505,17 @@ hint="I work with Memcached directly to store and obtain objects from your cache
 			try {
 				var result = futureTask.get(timeout=arguments.timeout,timeoutUnit=arguments.timeoutUnit);
 			} catch (any e) {
-				rethrow;
+				// If this is a timeout error, try one more time.
+				if (!listContains(e.message,"timeout",""))
+				{
+					rethrow;
+				} else {
+					try {
+						var result = futureTask.get(timeout=arguments.timeout,timeoutUnit=arguments.timeoutUnit);
+					} catch (any er) {
+						throw(message="Error with cache request. Second attempt. Original message: #er.message#",detail=er.detail);
+					}
+				}
 			}
 		}
 
@@ -599,7 +610,7 @@ hint="I work with Memcached directly to store and obtain objects from your cache
 
 		var ret = false;
 		var futureTask = "";
-		try 	{
+		try {
 			if (arguments.delay gt 0)	{
 				ret = variables.instance.memcached.delete(arguments.deletekey,arguments.delay);
 			} else {
@@ -608,7 +619,6 @@ hint="I work with Memcached directly to store and obtain objects from your cache
 		}  catch (Any e)	{
 			// failing gracefully
 			rethrow;
-			ret = "";
 		}
 		if (isdefined("ret"))	{
 			return createobject("component","#variables.config.dotNotationPathToCFCs#.FutureTask").init(ret);
@@ -626,16 +636,11 @@ hint="I work with Memcached directly to store and obtain objects from your cache
 
 		var futureTask = "";
 		var ret = "";
-		try 	{
+		try {
 			ret = variables.instance.memcached.set(arguments.key,arguments.expiry,serialize(arguments.value));
 		}  catch (Any e)	{
 			rethrow;
-			// failing gracefully
-			ret = "";
 		}
-
-		//var d = directoryList(expandPath('/app'));
-		//writeDump(d);abort;
 
 		return createObject("component","#variables.config.dotNotationPathToCFCs#.FutureTask").init(ret);
 	}

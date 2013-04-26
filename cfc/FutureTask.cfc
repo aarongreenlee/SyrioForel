@@ -104,7 +104,7 @@
 	</cffunction> 
 
 	<cffunction name="setDefaultTimeoutUnit" access="public" output="false" returntype="boolean">
-		<cfargument name="timeoutUnit" type="string" required="false" default="MILLISECONDS"/>
+		<cfargument name="timeoutUnit" type="string" required="false" default="SECONDS"/>
 		<cfset var isSet = false>
 		<cfif listfind("MILLISECONDS,NANOSECONDS,MICROSECONDS,SECONDS",ucase(arguments.timeoutUnit))>
 			<cfset variables.defaultTimeoutUnit = arguments.timeoutUnit>
@@ -114,7 +114,7 @@
 	</cffunction>
 	
 	<cffunction name="setDefaultRequestTimeout" access="public" output="false" returntype="boolean">
-		<cfargument name="timeout" type="numeric" required="false" default="400"/>
+		<cfargument name="timeout" type="numeric" required="false" default="3"/>
 		<cfset var isSet = false>
 		<cfif arguments.timeout gt -1>
 			<cfset variables.defaultRequestTimeout = arguments.timeout>
@@ -221,7 +221,8 @@
 	</cffunction>	
 
 	<cffunction name="getTimeUnitType" output="false" access="private" returntype="any">
-		<cfargument name="timeUnit" type="string" required="true"/>
+		<cfargument name="timeUnit" type="string" required="false" default="SECONDS"/>
+
 		<cfif arguments.timeUnit eq "nanoseconds">
 			<cfreturn variables.timeUnit.NANOSECONDS>
 		<cfelseif arguments.timeUnit eq "microseconds">
