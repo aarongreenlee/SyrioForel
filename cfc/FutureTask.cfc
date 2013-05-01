@@ -114,7 +114,7 @@
 	</cffunction>
 	
 	<cffunction name="setDefaultRequestTimeout" access="public" output="false" returntype="boolean">
-		<cfargument name="timeout" type="numeric" required="false" default="3"/>
+		<cfargument name="timeout" type="numeric" required="false" default="6"/>
 		<cfset var isSet = false>
 		<cfif arguments.timeout gt -1>
 			<cfset variables.defaultRequestTimeout = arguments.timeout>

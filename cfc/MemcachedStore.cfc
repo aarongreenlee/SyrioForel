@@ -28,8 +28,8 @@ hint="I work with Memcached directly to store and obtain objects from your cache
 	{
 		 'endpoints' = ''
 		,'defaultTimeoutUnit' = 'SECONDS'
-		,'defaultRequestTimeout' = 3
-		,'defaultTimeoutValue' = 3
+		,'defaultRequestTimeout' = 6
+		,'defaultTimeoutValue' = 6
 		,'dotNotationPathToCFCs' = ''
 		,'skipLookupDoubleGet' = true
 		,'environment' = 'production'
