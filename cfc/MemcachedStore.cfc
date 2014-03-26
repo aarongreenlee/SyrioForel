@@ -93,7 +93,11 @@ hint="I work with Memcached directly to store and obtain objects from your cache
 		JavaSystem.out.println("SyrioForel: Discover Endpoints? #config.discoverEndpoints#");
 		if (!config.discoverEndpoints)
 		{
-			variables.config.endpoints = config.endpoints;
+			if (structKeyExists(application,"config") && structKeyExists(application.config,"memcachedendpoint")) {
+				variables.config.endpoints = application.config.memcachedendpoint;
+			} else {
+				variables.config.endpoints = config.endpoints;
+			}
 		} else {
 			variables.config.endpoints = discoverAWSEndpoints(config);
 			attemptedDiscover=true;
