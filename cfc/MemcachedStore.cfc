@@ -669,6 +669,16 @@ hint="I work with Memcached directly to store and obtain objects from your cache
 	**/
 	private string function discoverAWSEndpoints(required config)
 	{
+		// This is something of a hack... yeah. More something than less....
+		// Setting this application variable will allow us to override discovery in AWS.
+		// This can be useful if you need to migrate endpoints in AWS but still need to maintain
+		// the same security relationships... which, allows the old and new endpoint to be discovered by the
+		// the code after this `if` statement.
+		if (structKeyExists(application,"config") && structkeyExists(application.config,"memcachedendpoint"))
+		{
+			return application.config.memcachedendpoint;
+		}
+
 		// Must have populated AWS Secret/Access values.
 		if (!structKeyExists(arguments.config,'awsaccesskey') || !structKeyExists(arguments.config,'awssecretkey') || len(trim(arguments.config.awsAccessKey)) == 0 || len(trim(arguments.config.awsSecretKey)) == 0)
 			throw(message="Missing AWSAccessKey and/or AWSSecretKey",detail='These properties should be provided when configuring your CacheBox Provider. These are required by the MemcachedStore when you ask to discover endpoints using your AWS credentials.',ErrorCode='MemcachedStore.BadConfig');
