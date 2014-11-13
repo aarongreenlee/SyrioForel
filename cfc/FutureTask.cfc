@@ -89,9 +89,8 @@
 					var ret = deserialize(ret);
 				}
 			} catch(Any e)	{
-				var ret = JavaCast("null",'');
 				cancel();
-				rethrow;
+				return JavaCast("null","");
 			}
 		</cfscript>
 		
